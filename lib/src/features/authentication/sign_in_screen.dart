@@ -51,7 +51,7 @@ class SignInScreenState extends State<SignInScreen> {
             child: IntrinsicHeight(
               child: Column(
                 children: [
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 20),
 
                   // Logo Section
                   Padding(
@@ -239,7 +239,7 @@ class SignInScreenState extends State<SignInScreen> {
 
                             // Account Check
                             const Center(child: AccountCheck(login: true)),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 12),
                           ],
                         ),
                       ),
@@ -273,7 +273,6 @@ class SignInScreenState extends State<SignInScreen> {
         } else {
           errorMessage = e.toString();
         }
-
         SnackBarUtil.showErrorSnackBar(context, errorMessage);
       }
     }

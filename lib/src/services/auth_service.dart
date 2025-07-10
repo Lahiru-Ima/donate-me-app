@@ -13,16 +13,34 @@ class AuthService {
         password: password,
       );
 
-      print(response.user);
-
       if (response.user != null) {
         SharedPref.setUserId(response.user!.id);
-        final userDoc = await _supabase
-            .from('users')
-            .select()
-            .eq('id', response.user!.id)
-            .single();
-        return UserModel.fromMap(userDoc);
+
+        try {
+          final userDoc = await _supabase
+              .from('users')
+              .select()
+              .eq('id', response.user!.id)
+              .single();
+          return UserModel.fromMap(userDoc);
+        } catch (e) {
+          // If user data doesn't exist in users table, create it
+          if (e.toString().contains('relation "public.users" does not exist') ||
+              e.toString().contains('No rows found')) {
+            throw AuthException(
+              'Database setup incomplete. Please contact support to set up the users table.',
+            );
+          }
+          // For other database errors, still allow sign in but with limited user data
+          return UserModel(
+            id: response.user!.id,
+            email: response.user!.email ?? email,
+            name: response.user!.userMetadata?['name'] ?? 'User',
+            phoneNumber: response.user!.userMetadata?['phone_number'] ?? '',
+            dateOfBirth: response.user!.userMetadata?['date_of_birth'],
+            gender: response.user!.userMetadata?['gender'],
+          );
+        }
       }
       return null;
     } on AuthException catch (error) {
@@ -43,6 +61,12 @@ class AuthService {
       }
       throw AuthException(errorMessage);
     } catch (e) {
+      print('Error : ${e.toString()}');
+      if (e.toString().contains('relation "public.users" does not exist')) {
+        throw AuthException(
+          'Database setup incomplete. Please contact support to set up the database.',
+        );
+      }
       throw AuthException('Failed to sign in: ${e.toString()}');
     }
   }
@@ -60,6 +84,12 @@ class AuthService {
       final AuthResponse response = await _supabase.auth.signUp(
         email: email,
         password: password,
+        data: {
+          'name': name,
+          'phone_number': phoneNumber,
+          'date_of_birth': dob,
+          'gender': gender,
+        },
       );
 
       if (response.user != null) {
@@ -72,7 +102,44 @@ class AuthService {
           gender: gender,
         );
 
-        await _supabase.from('users').insert(newUser.toMap());
+        // Note: The user record should be automatically created by the database trigger
+        // We don't need to manually insert into users table as the trigger handles it
+
+        // Wait a moment for the trigger to complete
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        // Verify the user was created in the users table
+        try {
+          final userRecord = await _supabase
+              .from('users')
+              .select()
+              .eq('id', response.user!.id)
+              .single();
+
+          print(
+            'User successfully created with trigger: ${userRecord['email']}',
+          );
+        } catch (e) {
+          print(
+            'Warning: User may not have been created by trigger: ${e.toString()}',
+          );
+
+          // If trigger failed, try manual creation as fallback
+          try {
+            await _supabase.from('users').insert(newUser.toMap());
+            print('User created manually as fallback');
+          } catch (insertError) {
+            if (insertError.toString().contains(
+              'relation "public.users" does not exist',
+            )) {
+              print(
+                'Users table does not exist. User created in auth but not in users table.',
+              );
+            } else {
+              print('Failed to insert user data: ${insertError.toString()}');
+            }
+          }
+        }
 
         return newUser;
       }
@@ -94,6 +161,11 @@ class AuthService {
       }
       throw AuthException(errorMessage);
     } catch (e) {
+      if (e.toString().contains('relation "public.users" does not exist')) {
+        throw AuthException(
+          'Database setup incomplete. Please contact support to set up the database.',
+        );
+      }
       throw AuthException('Failed to sign up: ${e.toString()}');
     }
   }
@@ -102,8 +174,24 @@ class AuthService {
   Future<void> signOut() async {
     try {
       await _supabase.auth.signOut();
+      print('User signed out successfully');
     } catch (e) {
+      print('Sign out error: ${e.toString()}');
       throw AuthException('Failed to sign out: ${e.toString()}');
+    }
+  }
+
+  // Reset password method
+  Future<void> resetPassword(String email) async {
+    try {
+      await _supabase.auth.resetPasswordForEmail(
+        email,
+        redirectTo: 'your-app://reset-password', // You can customize this URL
+      );
+    } catch (e) {
+      throw AuthException(
+        'Failed to send reset password email: ${e.toString()}',
+      );
     }
   }
 
@@ -117,6 +205,11 @@ class AuthService {
           .single();
       return UserModel.fromMap(response);
     } catch (e) {
+      if (e.toString().contains('relation "public.users" does not exist')) {
+        throw AuthException(
+          'Database setup incomplete. Please contact support to set up the database.',
+        );
+      }
       throw AuthException('Failed to fetch user data: ${e.toString()}');
     }
   }
@@ -126,6 +219,11 @@ class AuthService {
     try {
       await _supabase.from('users').update(user.toMap()).eq('id', user.id);
     } catch (e) {
+      if (e.toString().contains('relation "public.users" does not exist')) {
+        throw AuthException(
+          'Database setup incomplete. Please contact support to set up the database.',
+        );
+      }
       throw AuthException('Failed to update user: ${e.toString()}');
     }
   }

@@ -3,11 +3,14 @@ import 'package:donate_me_app/src/common_widgets/primary_button.dart';
 import 'package:donate_me_app/src/common_widgets/snackbar_util.dart';
 import 'package:donate_me_app/src/common_widgets/text_input_field.dart';
 import 'package:donate_me_app/src/constants/constants.dart';
+import 'package:donate_me_app/src/providers/auth_provider.dart';
 import 'package:donate_me_app/src/router/router_names.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -239,27 +242,39 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (_formKey.currentState!.saveAndValidate()) {
       setState(() => isLoading = true);
 
-      // Simulate API call delay
-      await Future.delayed(const Duration(seconds: 1));
+      final email = _formKey.currentState!.fields['email']!.value.trim();
+      final authProvider = Provider.of<AuthenticationProvider>(
+        context,
+        listen: false,
+      );
 
-      if (mounted) {
-        SnackBarUtil.showSuccessSnackBar(
-          context,
-          'Password reset link has been sent to your email.',
-        );
+      try {
+        await authProvider.resetPassword(email);
 
-        // Show service limitation message after success
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
-            SnackBarUtil.showErrorSnackBar(
-              context,
-              'To activate this service, buy a plan',
-            );
+        if (mounted) {
+          SnackBarUtil.showSuccessSnackBar(
+            context,
+            'Password reset link has been sent to your email.',
+          );
+
+          // Navigate back to sign in after successful reset request
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) {
+              context.push(RouterNames.signin);
+            }
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          String errorMessage = 'Failed to send reset email. Please try again.';
+          if (e is AuthException) {
+            errorMessage = e.message;
           }
-        });
+          SnackBarUtil.showErrorSnackBar(context, errorMessage);
+        }
+      } finally {
+        if (mounted) setState(() => isLoading = false);
       }
-
-      setState(() => isLoading = false);
     }
   }
 }

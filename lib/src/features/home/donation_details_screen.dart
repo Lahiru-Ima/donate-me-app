@@ -17,6 +17,99 @@ class DonationDetailsScreen extends StatelessWidget {
     required this.category,
   });
 
+  List<String> get requirements {
+    switch (type.toLowerCase()) {
+      case 'blood':
+        return [
+          'Age: 18-65 years',
+          'Weight: Minimum 50kg',
+          'Good health condition',
+          'No recent illness or medication',
+          'Valid ID required',
+          'No alcohol 24 hours before donation',
+        ];
+      case 'kidney':
+        return [
+          'Age: 18-70 years',
+          'Comprehensive medical evaluation',
+          'Psychological assessment',
+          'Family consent required',
+          'Valid ID and medical records',
+          'No history of major diseases',
+        ];
+      case 'hair':
+        return [
+          'Age: 18-60 years',
+          'Weight: Minimum 55kg',
+          'Previous blood donation experience',
+          'Good hydration required',
+          'Valid ID required',
+          'No recent vaccinations',
+        ];
+      case 'fund':
+        return [
+          'Age: 18-60 years',
+          'Weight: Minimum 50kg',
+          'Normal platelet count',
+          'No aspirin 48 hours before',
+          'Valid ID required',
+          'Good health condition',
+        ];
+      default:
+        return [
+          'Age: 18-65 years',
+          'Good health condition',
+          'Valid ID required',
+          'Medical clearance if needed',
+        ];
+    }
+  }
+
+  Map<String, String> get contactInfo {
+    switch (type.toLowerCase()) {
+      case 'blood donation':
+        return {
+          'coordinator': 'Blood Bank Coordinator',
+          'name': 'Dr. Priya Mendis',
+          'phone': '+94 77 234 5678',
+          'email': 'bloodbank@hospital.lk',
+          'time': '24/7 Emergency Available',
+        };
+      case 'organ donation':
+        return {
+          'coordinator': 'Organ Transplant Coordinator',
+          'name': 'Dr. Kamal Perera',
+          'phone': '+94 77 345 6789',
+          'email': 'organs@transplant.lk',
+          'time': '24/7 Critical Care',
+        };
+      case 'plasma donation':
+        return {
+          'coordinator': 'Plasma Center Coordinator',
+          'name': 'Dr. Nimal Silva',
+          'phone': '+94 77 456 7890',
+          'email': 'plasma@medcenter.lk',
+          'time': '8:00 AM - 4:00 PM',
+        };
+      case 'platelet donation':
+        return {
+          'coordinator': 'Hematology Coordinator',
+          'name': 'Dr. Anjali Fernando',
+          'phone': '+94 77 567 8901',
+          'email': 'platelets@hospital.lk',
+          'time': '9:00 AM - 5:00 PM',
+        };
+      default:
+        return {
+          'coordinator': 'Medical Coordinator',
+          'name': 'Dr. Sarah Johnson',
+          'phone': '+94 77 123 4567',
+          'email': 'coordinator@hospital.lk',
+          'time': '8:00 AM - 6:00 PM',
+        };
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -215,10 +308,9 @@ class DonationDetailsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  _buildRequirementItem('Age: 18-65 years'),
-                  _buildRequirementItem('Weight: Minimum 50kg'),
-                  _buildRequirementItem('Good health condition'),
-                  _buildRequirementItem('Valid ID required'),
+                  ...requirements.map(
+                    (requirement) => _buildRequirementItem(requirement),
+                  ),
                 ],
               ),
             ),
@@ -255,23 +347,23 @@ class DonationDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   _buildContactItem(
                     Icons.person,
-                    'Hospital Coordinator',
-                    'Dr. Sarah Johnson',
+                    contactInfo['coordinator']!,
+                    contactInfo['name']!,
                   ),
                   _buildContactItem(
                     Icons.phone,
                     'Phone Number',
-                    '+94 77 123 4567',
+                    contactInfo['phone']!,
                   ),
                   _buildContactItem(
                     Icons.email,
                     'Email',
-                    'coordinator@hospital.lk',
+                    contactInfo['email']!,
                   ),
                   _buildContactItem(
                     Icons.access_time,
                     'Available Time',
-                    '8:00 AM - 6:00 PM',
+                    contactInfo['time']!,
                   ),
                 ],
               ),

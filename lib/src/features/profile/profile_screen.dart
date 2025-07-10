@@ -1,4 +1,4 @@
-import 'package:donate_me_app/src/common_widgets/snackbar_util.dart';
+import 'package:donate_me_app/src/common_widgets/safe_auth_actions.dart';
 import 'package:donate_me_app/src/constants/constants.dart';
 import 'package:donate_me_app/src/providers/auth_provider.dart';
 import 'package:donate_me_app/src/router/router_names.dart';
@@ -45,7 +45,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit, color: kPrimaryColor),
-            onPressed: () {},
+            onPressed: () {
+              context.push(RouterNames.editProfile);
+            },
           ),
         ],
       ),
@@ -114,13 +116,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         _buildTabItem(Icons.person_outline, 'Profile', () {}),
                         _buildTabItem(
-                          Icons.account_balance_wallet_outlined,
-                          'Wallet',
-                          () {},
+                          Icons.post_add_outlined,
+                          'My Posts',
+                          () => _showCreatePostDialog(),
                         ),
                         _buildTabItem(
-                          Icons.shopping_bag_outlined,
-                          'My Orders',
+                          Icons.account_balance_wallet_outlined,
+                          'Wallet',
                           () {},
                         ),
                       ],
@@ -130,6 +132,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 10),
 
                   // Menu Items
+                  _buildMenuItem(
+                    Icons.post_add_outlined,
+                    'My Posts',
+                    () => _showCreatePostDialog(),
+                  ),
                   _buildMenuItem(
                     Icons.privacy_tip_outlined,
                     'Privacy Policy',
@@ -191,22 +198,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       foregroundColor: Colors.black,
                     ),
                     onPressed: () async {
-                      Navigator.pop(context);
-
-                      final authProvider = Provider.of<AuthenticationProvider>(
-                        context,
-                        listen: false,
-                      );
-
-                      await authProvider.signOut();
-
-                      if (mounted) {
-                        SnackBarUtil.showSuccessSnackBar(
-                          context,
-                          "Logged out successfully",
-                        );
-                        context.go(RouterNames.signin);
-                      }
+                      Navigator.pop(context); // Close dialog first
+                      await SafeAuthActions.signOut(context);
                     },
                     child: const Text('Logout'),
                   ),
@@ -216,6 +209,121 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       },
+    );
+  }
+
+  void _showCreatePostDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            'Create Donation Request',
+            style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryColor),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildCreatePostOption(
+                context,
+                'Blood',
+                Icons.bloodtype,
+                kBloodColor,
+                'Request blood donation',
+                () => context.push(RouterNames.createBloodPost),
+              ),
+              const SizedBox(height: 12),
+              _buildCreatePostOption(
+                context,
+                'Hair',
+                Icons.content_cut,
+                Colors.brown,
+                'Request hair donation',
+                () => context.push(RouterNames.createHairPost),
+              ),
+              const SizedBox(height: 12),
+              _buildCreatePostOption(
+                context,
+                'Kidney',
+                Icons.favorite,
+                Colors.green,
+                'Request kidney donation',
+                () => context.push(RouterNames.createKidneyPost),
+              ),
+              const SizedBox(height: 12),
+              _buildCreatePostOption(
+                context,
+                'Fund',
+                Icons.attach_money,
+                Colors.orange,
+                'Request financial assistance',
+                () => context.push(RouterNames.createFundPost),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel', style: TextStyle(color: Colors.grey[600])),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildCreatePostOption(
+    BuildContext context,
+    String title,
+    IconData icon,
+    Color color,
+    String subtitle,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context); // Close dialog first
+        onTap();
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[300]!),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey[600]),
+          ],
+        ),
+      ),
     );
   }
 

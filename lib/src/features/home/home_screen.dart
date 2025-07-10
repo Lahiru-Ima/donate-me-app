@@ -3,8 +3,10 @@ import 'package:donate_me_app/src/constants/constants.dart';
 import 'package:donate_me_app/src/common_widgets/community_request_card.dart';
 import 'package:donate_me_app/src/providers/auth_provider.dart';
 import 'package:donate_me_app/src/providers/wishlist_provider.dart';
+import 'package:donate_me_app/src/router/router_names.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -102,6 +104,22 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Get category color
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case 'Blood':
+        return kBloodColor;
+      case 'Hair':
+        return Colors.brown;
+      case 'Kidney':
+        return Colors.green;
+      case 'Fund':
+        return Colors.orange;
+      default:
+        return kPrimaryColor;
+    }
+  }
+
   // Get filtered data based on selected category
   List<Map<String, dynamic>> getFilteredData() {
     if (selectedCategory == null) {
@@ -120,6 +138,144 @@ class _HomeScreenState extends State<HomeScreen> {
     return getFilteredData()
         .where((item) => item['isUrgent'] == false)
         .toList();
+  }
+
+  void _showCreatePostDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Create Donation Request',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'What type of donation request would you like to create?',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              _buildCreatePostOption(
+                context,
+                'Blood',
+                Icons.bloodtype,
+                kBloodColor,
+                'Request blood donation',
+                () => context.push(RouterNames.createBloodPost),
+              ),
+              const SizedBox(height: 12),
+              _buildCreatePostOption(
+                context,
+                'Hair',
+                Icons.content_cut,
+                Colors.brown,
+                'Request hair donation',
+                () => context.push(RouterNames.createHairPost),
+              ),
+              const SizedBox(height: 12),
+              _buildCreatePostOption(
+                context,
+                'Kidney',
+                Icons.favorite,
+                Colors.green,
+                'Request kidney donation',
+                () => context.push(RouterNames.createKidneyPost),
+              ),
+              const SizedBox(height: 12),
+              _buildCreatePostOption(
+                context,
+                'Fund',
+                Icons.attach_money,
+                Colors.orange,
+                'Request financial assistance',
+                () => context.push(RouterNames.createFundPost),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel', style: TextStyle(color: Colors.grey[600])),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildCreatePostOption(
+    BuildContext context,
+    String title,
+    IconData icon,
+    Color color,
+    String subtitle,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        onTap();
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(icon, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey[600]),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _navigateToCreatePost(String category) {
+    switch (category) {
+      case 'Blood':
+        context.push(RouterNames.createBloodPost);
+        break;
+      case 'Hair':
+        context.push(RouterNames.createHairPost);
+        break;
+      case 'Kidney':
+        context.push(RouterNames.createKidneyPost);
+        break;
+      case 'Fund':
+        context.push(RouterNames.createFundPost);
+        break;
+    }
   }
 
   @override
@@ -167,6 +323,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showCreatePostDialog(context),
+        backgroundColor: kPrimaryColor,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
+          'Create Request',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -203,6 +368,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
             // Show content only if category is selected
             if (selectedCategory != null) ...[
+              // Create Request Button for selected category
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 16),
+                child: ElevatedButton.icon(
+                  onPressed: () => _navigateToCreatePost(selectedCategory!),
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  label: Text(
+                    'Create ${selectedCategory} Request',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _getCategoryColor(selectedCategory!),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+
               // Urgent Requests Section
               if (getUrgentRequests().isNotEmpty) ...[
                 const Text(

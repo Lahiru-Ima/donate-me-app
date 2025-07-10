@@ -14,7 +14,7 @@ final kShadowColor = const Color.fromARGB(
 
 // Category Colors
 const kBloodColor = Color(0xFFEF474F); // Red
-const kHairColor = Color(0xFF9C27B0); // Purple
+const kHairColor = Color.fromARGB(255, 105, 82, 82); // Brown
 const kKidneyColor = Color(0xFFE91E63); // Pink
 const kFundColor = Color(0xFF4CAF50); // Green
 

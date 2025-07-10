@@ -71,14 +71,38 @@ class AuthenticationProvider extends ChangeNotifier {
 
   // Sign out
   Future<void> signOut() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
     try {
       await _authService.signOut();
       _userModel = null;
       _errorMessage = null;
       await SharedPref.clearSession();
+      _isLoading = false;
       notifyListeners();
     } catch (e) {
+      _isLoading = false;
       _errorMessage = 'Failed to sign out: ${e.toString()}';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  // Reset password
+  Future<void> resetPassword(String email) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _authService.resetPassword(email);
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString();
       notifyListeners();
       rethrow;
     }

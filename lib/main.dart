@@ -33,7 +33,7 @@ class MainApp extends StatelessWidget {
           return MaterialApp.router(
             debugShowCheckedModeBanner: false,
             routerConfig: RouterClass().router,
-            title: 'Cey Agro App',
+            title: 'Donate Me App',
             theme: ThemeData(useMaterial3: true),
           );
         },

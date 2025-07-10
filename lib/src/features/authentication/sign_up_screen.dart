@@ -52,7 +52,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             child: IntrinsicHeight(
               child: Column(
                 children: [
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 20),
 
                   // Logo Section
                   Padding(
@@ -477,7 +477,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                             // Account Check
                             const Center(child: AccountCheck(login: false)),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 12),
                           ],
                         ),
                       ),
@@ -493,7 +493,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void createAccount(BuildContext context) async {
-    if (mounted) setState(() => isLoading = true);
+    if (!mounted) return;
+
+    setState(() => isLoading = true);
 
     final email = _formKey.currentState!.fields['email']!.value.trim();
     final password = _formKey.currentState!.fields['password']!.value.trim();
@@ -502,6 +504,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         .trim();
     final dob = _dobController.text;
     final gender = this.gender;
+
     final authProvider = Provider.of<AuthenticationProvider>(
       context,
       listen: false,
@@ -516,10 +519,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
         dob,
         gender,
       );
-      SnackBarUtil.showSuccessSnackBar(context, 'Sign up successful');
-      final user = authProvider.userModel;
-      if (user != null) {
-        context.push(RouterNames.signin);
+
+      if (mounted) {
+        SnackBarUtil.showSuccessSnackBar(context, 'Sign up successful');
+        final user = authProvider.userModel;
+        if (user != null) {
+          context.push(RouterNames.signin);
+        }
       }
     } catch (e) {
       String errorMessage = 'An error occurred. Please try again.';
@@ -528,11 +534,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
       } else {
         errorMessage = e.toString();
       }
+
       if (mounted) {
         SnackBarUtil.showErrorSnackBar(context, errorMessage);
       }
     } finally {
-      if (mounted) setState(() => isLoading = false);
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 }

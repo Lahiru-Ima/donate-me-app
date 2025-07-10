@@ -1,4 +1,5 @@
 import 'package:donate_me_app/src/constants/constants.dart';
+import 'package:donate_me_app/src/router/router_names.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -31,11 +32,9 @@ class Error404Screen extends StatelessWidget {
                 title: "Lost in Space!",
                 description:
                     "The page you are looking for seems to be missing. Please go back or visit the homepage.",
-                // button: you can pass your custom button,
                 btnText: "Back to home",
                 press: () {
-                  context.pop();
-                  // context.push(RouterNames.home);
+                  context.push(RouterNames.home);
                 },
               ),
             ],

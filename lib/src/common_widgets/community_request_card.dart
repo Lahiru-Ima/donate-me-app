@@ -1,11 +1,8 @@
 import 'package:donate_me_app/src/constants/constants.dart';
-import 'package:donate_me_app/src/features/home/donation_details_screen.dart';
-import 'package:donate_me_app/src/features/donation/blood_donation_form_screen.dart';
-import 'package:donate_me_app/src/features/donation/hair_donation_form_screen.dart';
-import 'package:donate_me_app/src/features/donation/kidney_donation_form_screen.dart';
-import 'package:donate_me_app/src/features/donation/fund_donation_form_screen.dart';
+import 'package:donate_me_app/src/router/router_names.dart';
 import 'package:donate_me_app/src/providers/wishlist_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class CommunityRequestCard extends StatelessWidget {
@@ -44,64 +41,16 @@ class CommunityRequestCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        if (category.toLowerCase() == 'blood') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => BloodDonationFormScreen(
-                type: type,
-                location: location,
-                description: description,
-              ),
-            ),
-          );
-        } else if (category.toLowerCase() == 'hair') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => HairDonationFormScreen(
-                type: type,
-                location: location,
-                description: description,
-              ),
-            ),
-          );
-        } else if (category.toLowerCase() == 'kidney') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => KidneyDonationFormScreen(
-                type: type,
-                location: location,
-                description: description,
-              ),
-            ),
-          );
-        } else if (category.toLowerCase() == 'fund') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => FundDonationFormScreen(
-                type: type,
-                location: location,
-                description: description,
-              ),
-            ),
-          );
-        } else {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DonationDetailsScreen(
-                type: type,
-                location: location,
-                description: description,
-                isUrgent: false,
-                category: category,
-              ),
-            ),
-          );
-        }
+        context.push(
+          RouterNames.donationDetails,
+          extra: {
+            'type': type,
+            'location': location,
+            'description': description,
+            'isUrgent': false,
+            'category': category,
+          },
+        );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -218,63 +167,32 @@ class CommunityRequestCard extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () {
                     if (category.toLowerCase() == 'blood') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BloodDonationFormScreen(
-                            type: type,
-                            location: location,
-                            description: description,
-                          ),
-                        ),
-                      );
-                    } else if (category.toLowerCase() == 'hair') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => HairDonationFormScreen(
-                            type: type,
-                            location: location,
-                            description: description,
-                          ),
-                        ),
-                      );
-                    } else if (category.toLowerCase() == 'kidney') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => KidneyDonationFormScreen(
-                            type: type,
-                            location: location,
-                            description: description,
-                          ),
-                        ),
-                      );
-                    } else if (category.toLowerCase() == 'fund') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FundDonationFormScreen(
-                            type: type,
-                            location: location,
-                            description: description,
-                          ),
-                        ),
-                      );
-                    } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DonationDetailsScreen(
-                            type: type,
-                            location: location,
-                            description: description,
-                            isUrgent: false,
-                            category: category,
-                          ),
-                        ),
-                      );
-                    }
+                    context.push(RouterNames.bloodDonation, extra: {
+                      'type': type,
+                      'location': location,
+                      'description': description,
+                    });
+                  } else if (category.toLowerCase() == 'hair') {
+                    context.push(RouterNames.hairDonation, extra: {
+                      'type': type,
+                      'location': location,
+                      'description': description,
+                    });
+                  } else if (category.toLowerCase() == 'kidney') {
+                    context.push(RouterNames.kidneyDonation, extra: {
+                      'type': type,
+                      'location': location,
+                      'description': description,
+                    });
+                  } else if (category.toLowerCase() == 'fund') {
+                    context.push(RouterNames.fundDonation, extra: {
+                      'type': type,
+                      'location': location,
+                      'description': description,
+                      'isUrgent': true,
+                      'category': category,
+                    });
+                  }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,

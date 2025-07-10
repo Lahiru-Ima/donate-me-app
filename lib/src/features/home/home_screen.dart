@@ -7,6 +7,7 @@ import 'package:donate_me_app/src/router/router_names.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:donate_me_app/l10n/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,6 +19,22 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String? selectedCategory = 'Blood';
   final List<String> categories = ['Blood', 'Hair', 'Kidney', 'Fund'];
+
+  // Get localized category name
+  String getLocalizedCategoryName(String category, AppLocalizations l10n) {
+    switch (category) {
+      case 'Blood':
+        return l10n.blood;
+      case 'Hair':
+        return l10n.hair;
+      case 'Kidney':
+        return l10n.kidney;
+      case 'Fund':
+        return l10n.fund;
+      default:
+        return category;
+    }
+  }
 
   // Sample data for different categories
   final Map<String, List<Map<String, dynamic>>> categoryData = {
@@ -141,12 +158,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showCreatePostDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text(
-            'Create Donation Request',
+          title: Text(
+            l10n.createDonationRequest,
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           content: Column(
@@ -284,6 +302,8 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       listen: false,
     );
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -295,15 +315,17 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Hi, ${authProvider.userModel?.name.split(' ')[0] ?? 'User'}',
+                  l10n.hiUser(
+                    authProvider.userModel?.name.split(' ')[0] ?? 'User',
+                  ),
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
                   ),
                 ),
-                const Text(
-                  'Make a difference today',
+                Text(
+                  l10n.makeDifference,
                   style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
               ],
@@ -327,8 +349,8 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: () => _showCreatePostDialog(context),
         backgroundColor: kPrimaryColor,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          'Create Request',
+        label: Text(
+          l10n.createRequest,
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
       ),
@@ -337,8 +359,8 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Categories',
+            Text(
+              l10n.categories,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -352,7 +374,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: categories.map((category) {
                   return _buildCategoryItem(
-                    category,
+                    getLocalizedCategoryName(category, l10n),
                     getCategoryIcon(category),
                     isSelected: selectedCategory == category,
                     onPressed: () {
@@ -376,7 +398,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPressed: () => _navigateToCreatePost(selectedCategory!),
                   icon: const Icon(Icons.add, color: Colors.white),
                   label: Text(
-                    'Create ${selectedCategory} Request',
+                    '${l10n.createRequest} ${getLocalizedCategoryName(selectedCategory!, l10n)}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -394,8 +416,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Urgent Requests Section
               if (getUrgentRequests().isNotEmpty) ...[
-                const Text(
-                  'Urgent Requests',
+                Text(
+                  l10n.urgentRequests,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -463,8 +485,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Community Requests Section
               if (getCommunityRequests().isNotEmpty) ...[
-                const Text(
-                  'Community Requests',
+                Text(
+                  l10n.communityRequests,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

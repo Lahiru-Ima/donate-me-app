@@ -152,7 +152,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     'Notification',
                     () {},
                   ),
-                  _buildMenuItem(Icons.settings_outlined, 'Settings', () {}),
+                  _buildMenuItem(Icons.settings_outlined, 'Settings', () {
+                    context.push(RouterNames.settings);
+                  }),
                   _buildMenuItem(Icons.help_outline, 'Help', () {}),
                   _buildMenuItem(Icons.logout, 'Logout', () {
                     _logout(context);

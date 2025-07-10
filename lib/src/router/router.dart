@@ -19,6 +19,7 @@ import 'package:donate_me_app/src/features/jobs/post_job_screen.dart';
 import 'package:donate_me_app/src/features/jobs/job_application_screen.dart';
 import 'package:donate_me_app/src/features/profile/profile_screen.dart';
 import 'package:donate_me_app/src/features/profile/edit_profile_screen.dart';
+import 'package:donate_me_app/src/features/settings/settings_screen.dart';
 import 'package:donate_me_app/src/features/splash/splash_screen.dart';
 import 'package:donate_me_app/src/router/router_names.dart';
 import 'package:donate_me_app/src/router/shell_navigation.dart';
@@ -141,6 +142,10 @@ class RouterClass {
       GoRoute(
         path: RouterNames.editProfile,
         builder: (context, state) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: RouterNames.settings,
+        builder: (context, state) => const SettingsScreen(),
       ),
 
       // Shell navigation for main app

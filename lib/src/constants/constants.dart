@@ -1,0 +1,21 @@
+import 'package:flutter/material.dart';
+
+const kPrimaryColor = Color(0xFFEF474F);
+const kSecondaryColor = Color.fromARGB(255, 218, 182, 182);
+const kBgColor = Color(0xFFDEDEDE);
+const kTextColor = Colors.black;
+const kBlackColor = Colors.black;
+final kShadowColor = const Color.fromARGB(
+  17,
+  211,
+  211,
+  211,
+).withValues(red: 211, green: 211, blue: 211, alpha: 17);
+
+// Category Colors
+const kBloodColor = Color(0xFFEF474F); // Red
+const kHairColor = Color(0xFF9C27B0); // Purple
+const kKidneyColor = Color(0xFFE91E63); // Pink
+const kFundColor = Color(0xFF4CAF50); // Green
+
+const kDefaultPadding = EdgeInsets.symmetric(horizontal: 20);

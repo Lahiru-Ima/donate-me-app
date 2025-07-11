@@ -1,7 +1,9 @@
 import 'package:donate_me_app/src/constants/constants.dart';
+import 'package:donate_me_app/src/providers/wishlist_provider.dart';
 import 'package:donate_me_app/src/router/router_names.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 class DonationDetailsScreen extends StatelessWidget {
   final Map<String, dynamic> requestData;
@@ -169,11 +171,26 @@ class DonationDetailsScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.share, color: Colors.black),
-            onPressed: () {},
+            onPressed: () {
+              // TODO: Implement share functionality
+            },
           ),
-          IconButton(
-            icon: const Icon(Icons.favorite_border, color: Colors.black),
-            onPressed: () {},
+          Consumer<WishlistProvider>(
+            builder: (context, wishlistProvider, child) {
+              final isInWishlist = id.isNotEmpty
+                  ? wishlistProvider.isInWishlistById(id)
+                  : wishlistProvider.isInWishlist(type, location);
+
+              return IconButton(
+                icon: Icon(
+                  isInWishlist ? Icons.favorite : Icons.favorite_border,
+                  color: isInWishlist ? Colors.red : Colors.black,
+                ),
+                onPressed: () async {
+                  await _toggleWishlist(context, wishlistProvider);
+                },
+              );
+            },
           ),
         ],
       ),
@@ -478,6 +495,43 @@ class DonationDetailsScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _toggleWishlist(
+    BuildContext context,
+    WishlistProvider wishlistProvider,
+  ) async {
+    final isCurrentlyInWishlist = id.isNotEmpty
+        ? wishlistProvider.isInWishlistById(id)
+        : wishlistProvider.isInWishlist(type, location);
+
+    if (isCurrentlyInWishlist) {
+      // Remove from wishlist
+      if (id.isNotEmpty) {
+        await wishlistProvider.removeFromWishlistById(id);
+      } else {
+        await wishlistProvider.removeFromWishlist(type, location);
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Removed from wishlist'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      // Add to wishlist
+      await wishlistProvider.addToWishlist(requestData);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Added to wishlist'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   void _navigateToCategory(BuildContext context) {

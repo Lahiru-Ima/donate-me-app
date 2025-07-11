@@ -8,8 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:donate_me_app/src/providers/donation_request_provider.dart';
-import 'package:donate_me_app/src/providers/wishlist_provider.dart';
-
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -63,7 +61,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  AppBar _buildAppBar(AuthenticationProvider authProvider, AppLocalizations l10n) {
+  AppBar _buildAppBar(
+    AuthenticationProvider authProvider,
+    AppLocalizations l10n,
+  ) {
     return AppBar(
       forceMaterialTransparency: true,
       title: Row(
@@ -73,7 +74,9 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                l10n.hiUser(authProvider.userModel?.name.split(' ')[0] ?? 'User'),
+                l10n.hiUser(
+                  authProvider.userModel?.name.split(' ')[0] ?? 'User',
+                ),
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -184,7 +187,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildContentSection(DonationRequestProvider provider, AppLocalizations l10n) {
+  Widget _buildContentSection(
+    DonationRequestProvider provider,
+    AppLocalizations l10n,
+  ) {
     if (provider.isLoading) {
       return const Center(
         child: Padding(
@@ -218,7 +224,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildErrorState(DonationRequestProvider provider, AppLocalizations l10n) {
+  Widget _buildErrorState(
+    DonationRequestProvider provider,
+    AppLocalizations l10n,
+  ) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 40),
@@ -246,9 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 provider.clearError();
                 provider.loadCategory(selectedCategory);
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimaryColor,
-              ),
+              style: ElevatedButton.styleFrom(backgroundColor: kPrimaryColor),
               child: const Text('Retry', style: TextStyle(color: Colors.white)),
             ),
           ],
@@ -280,7 +287,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildUrgentSection(List<DonationRequestModel> requests, AppLocalizations l10n) {
+  Widget _buildUrgentSection(
+    List<DonationRequestModel> requests,
+    AppLocalizations l10n,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -301,7 +311,9 @@ class _HomeScreenState extends State<HomeScreen> {
             itemBuilder: (context, index) {
               return DonationRequestCard.urgent(
                 request: requests[index],
-                onWishlistToggle: () => _toggleWishlist(requests[index]),
+                onWishlistToggle: () {
+                  // Optional callback for additional feedback
+                },
               );
             },
           ),
@@ -310,7 +322,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCommunitySection(List<DonationRequestModel> requests, AppLocalizations l10n) {
+  Widget _buildCommunitySection(
+    List<DonationRequestModel> requests,
+    AppLocalizations l10n,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -330,7 +345,9 @@ class _HomeScreenState extends State<HomeScreen> {
           itemBuilder: (context, index) {
             return DonationRequestCard.community(
               request: requests[index],
-              onWishlistToggle: () => _toggleWishlist(requests[index]),
+              onWishlistToggle: () {
+                // Optional callback for additional feedback
+              },
             );
           },
         ),
@@ -343,36 +360,6 @@ class _HomeScreenState extends State<HomeScreen> {
       selectedCategory = categoryId;
     });
     context.read<DonationRequestProvider>().loadCategory(categoryId);
-  }
-
-  void _toggleWishlist(DonationRequestModel request) {
-    final wishlistProvider = context.read<WishlistProvider>();
-    final item = {
-      'type': request.title,
-      'location': request.location,
-      'description': request.description,
-      'category': request.category,
-      'isUrgent': request.isUrgent,
-    };
-
-    wishlistProvider.toggleWishlist(item);
-
-    final isInWishlist = wishlistProvider.isInWishlist(
-      request.title,
-      request.location,
-    );
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isInWishlist ? 'Added to wishlist' : 'Removed from wishlist',
-          ),
-          backgroundColor: isInWishlist ? Colors.green : Colors.red,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
   }
 
   String _getLocalizedCategoryName(String categoryId, AppLocalizations l10n) {

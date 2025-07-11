@@ -95,12 +95,63 @@ class DonationRequestCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Consumer<WishlistProvider>(
                     builder: (context, wishlistProvider, child) {
-                      final isInWishlist = wishlistProvider.isInWishlist(
-                        request.title,
-                        request.location,
-                      );
+                      // Check if in wishlist using multiple methods for better accuracy
+                      bool isInWishlist = false;
+                      if (request.id.isNotEmpty) {
+                        isInWishlist = wishlistProvider.isInWishlistById(
+                          request.id,
+                        );
+                      } else {
+                        isInWishlist = wishlistProvider.isInWishlist(
+                          request.title,
+                          request.location,
+                        );
+                      }
+
                       return GestureDetector(
-                        onTap: onWishlistToggle,
+                        onTap: () async {
+                          if (isInWishlist) {
+                            // Remove from wishlist
+                            if (request.id.isNotEmpty) {
+                              await wishlistProvider.removeFromWishlistById(
+                                request.id,
+                              );
+                            } else {
+                              await wishlistProvider.removeFromWishlist(
+                                request.title,
+                                request.location,
+                              );
+                            }
+
+                            // Show removed message
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Removed from wishlist'),
+                                backgroundColor: Colors.red,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          } else {
+                            // Add to wishlist
+                            await wishlistProvider.addToWishlist(
+                              request.toMap(),
+                            );
+
+                            // Show added message
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Added to wishlist'),
+                                backgroundColor: Colors.green,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          }
+
+                          // Call the external callback if provided
+                          if (onWishlistToggle != null) {
+                            onWishlistToggle!();
+                          }
+                        },
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           child: Icon(

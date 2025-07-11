@@ -33,7 +33,13 @@ class MainApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthenticationProvider()),
-        ChangeNotifierProvider(create: (_) => WishlistProvider()),
+        ChangeNotifierProvider(
+          create: (_) {
+            final provider = WishlistProvider();
+            provider.initializeWishlist();
+            return provider;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => DonationRequestProvider()),
         ChangeNotifierProvider(create: (_) => DonationRegistrationProvider()),
         ChangeNotifierProvider(create: (_) => JobProvider()),

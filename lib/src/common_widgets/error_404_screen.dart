@@ -1,3 +1,4 @@
+import 'package:donate_me_app/src/common_widgets/primary_button.dart';
 import 'package:donate_me_app/src/constants/constants.dart';
 import 'package:donate_me_app/src/router/router_names.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +35,8 @@ class Error404Screen extends StatelessWidget {
                     "The page you are looking for seems to be missing. Please go back or visit the homepage.",
                 btnText: "Back to home",
                 press: () {
-                  context.push(RouterNames.home);
+                  //redirect to home page
+                  context.go(RouterNames.home);
                 },
               ),
             ],
@@ -83,19 +85,10 @@ class ErrorInfo extends StatelessWidget {
             const SizedBox(height: 16 * 2.5),
             Center(
               child: SizedBox(
-                width: size.width * 0.5,
+                width: size.width * 0.8,
                 child:
                     button ??
-                    ElevatedButton(
-                      onPressed: press,
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 48),
-                        shape: const StadiumBorder(),
-                        backgroundColor: kPrimaryColor,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: Text(btnText ?? "Retry".toUpperCase()),
-                    ),
+                    PrimaryButton(text: btnText ?? "Retry", press: press),
               ),
             ),
             const SizedBox(height: 16),

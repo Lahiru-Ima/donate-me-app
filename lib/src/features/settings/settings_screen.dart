@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
 import '../../constants/constants.dart';
 import '../../providers/locale_provider.dart';
 
@@ -17,20 +16,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        forceMaterialTransparency: true,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black54),
-          onPressed: () => context.pop(),
-        ),
+        backgroundColor: Colors.white,
         title: const Text(
           'Settings',
-          style: TextStyle(
-            color: kPrimaryColor,
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
         ),
       ),
       body: SingleChildScrollView(
@@ -177,9 +168,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     'Notifications',
                     'Manage notification preferences',
                     Icons.notifications_outlined,
-                    () {
-                      // TODO: Navigate to notification settings
-                    },
+                    () {},
                   ),
                   const SizedBox(height: 12),
                   _buildSettingsOption(
@@ -187,7 +176,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     'Privacy and security settings',
                     Icons.privacy_tip_outlined,
                     () {
-                      // TODO: Navigate to privacy settings
+                      _showPrivacyPolicy(context);
                     },
                   ),
                   const SizedBox(height: 12),
@@ -357,6 +346,99 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPrivacyPolicy(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Privacy Policy'),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 400,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Last updated: December 2024',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                _buildPrivacySection(
+                  'Information We Collect',
+                  'We collect information you provide directly to us, such as when you create an account, make a donation request, or contact us for support. This may include your name, email address, phone number, and other contact information.',
+                ),
+
+                _buildPrivacySection(
+                  'How We Use Your Information',
+                  'We use the information we collect to provide, maintain, and improve our services, process donation requests, communicate with you, and ensure the security of our platform.',
+                ),
+
+                _buildPrivacySection(
+                  'Information Sharing',
+                  'We do not sell, trade, or otherwise transfer your personal information to third parties except as described in this privacy policy. We may share your information with verified donors/recipients to facilitate donations.',
+                ),
+
+                _buildPrivacySection(
+                  'Data Security',
+                  'We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. However, no method of transmission over the internet is 100% secure.',
+                ),
+
+                _buildPrivacySection(
+                  'Your Rights',
+                  'You have the right to access, update, or delete your personal information. You may also opt out of certain communications from us. Contact us if you wish to exercise these rights.',
+                ),
+
+                _buildPrivacySection(
+                  'Contact Us',
+                  'If you have any questions about this Privacy Policy, please contact us at privacy@donatemapp.com or through the app\'s support section.',
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Close', style: TextStyle(color: kPrimaryColor)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPrivacySection(String title, String content) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            content,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[700],
+              height: 1.4,
+            ),
           ),
         ],
       ),

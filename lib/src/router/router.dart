@@ -19,7 +19,10 @@ import 'package:donate_me_app/src/features/jobs/post_job_screen.dart';
 import 'package:donate_me_app/src/features/jobs/job_application_screen.dart';
 import 'package:donate_me_app/src/features/profile/profile_screen.dart';
 import 'package:donate_me_app/src/features/profile/edit_profile_screen.dart';
+import 'package:donate_me_app/src/features/profile/my_posts_screen.dart';
 import 'package:donate_me_app/src/features/settings/settings_screen.dart';
+import 'package:donate_me_app/src/features/help/help_screen.dart';
+import 'package:donate_me_app/src/features/wallet/wallet_screen.dart';
 import 'package:donate_me_app/src/features/splash/splash_screen.dart';
 import 'package:donate_me_app/src/router/router_names.dart';
 import 'package:donate_me_app/src/router/shell_navigation.dart';
@@ -145,6 +148,18 @@ class RouterClass {
       GoRoute(
         path: RouterNames.settings,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: RouterNames.myPosts,
+        builder: (context, state) => const MyPostsScreen(),
+      ),
+      GoRoute(
+        path: RouterNames.help,
+        builder: (context, state) => const HelpScreen(),
+      ),
+      GoRoute(
+        path: RouterNames.wallet,
+        builder: (context, state) => const WalletScreen(),
       ),
 
       // Shell navigation for main app

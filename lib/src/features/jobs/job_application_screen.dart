@@ -60,7 +60,9 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
     if (widget.job == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Apply for Job')),
-        body: const Center(child: Text('Job information not available')),
+        body: const Center(
+          child: Text('Job information not available'),
+        ),
       );
     }
 
@@ -665,27 +667,21 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
 
     try {
       final formData = _formKey.currentState!.fields;
-
+      
       // Get form values with null safety
       final fullName = formData['full_name']?.value?.toString() ?? '';
       final phone = formData['phone']?.value?.toString() ?? '';
       final email = formData['email']?.value?.toString() ?? '';
       final address = formData['address']?.value?.toString() ?? '';
       final experience = formData['experience']?.value?.toString() ?? '';
-      final previousExperience =
-          formData['previous_experience']?.value?.toString() ?? '';
+      final previousExperience = formData['previous_experience']?.value?.toString() ?? '';
       final skillsString = formData['skills']?.value?.toString() ?? '';
-      final expectedSalary =
-          formData['expected_salary']?.value?.toString() ?? '';
+      final expectedSalary = formData['expected_salary']?.value?.toString() ?? '';
       final whyHire = formData['why_hire']?.value?.toString() ?? '';
-
+      
       // Convert skills string to list
-      List<String> skillsList = skillsString.isNotEmpty
-          ? skillsString
-                .split(',')
-                .map((skill) => skill.trim())
-                .where((skill) => skill.isNotEmpty)
-                .toList()
+      List<String> skillsList = skillsString.isNotEmpty 
+          ? skillsString.split(',').map((skill) => skill.trim()).where((skill) => skill.isNotEmpty).toList()
           : [];
 
       // Convert references to list (for now, use a placeholder)
@@ -698,22 +694,16 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
         email: email,
         phone: phone,
         address: address,
-        age: 25, // TODO: Get actual age from form or user profile
-        gender: 'Not specified', // TODO: Add gender field to form
         experience: '$experience years of experience. $previousExperience',
         skills: skillsList,
         availability: _selectedAvailability,
         motivation: whyHire,
         referencesList: referencesList,
-        emergencyContact: 'To be provided',
-        emergencyPhone: 'To be provided',
-        hasTransportation: true, // TODO: Add this field to form
-        additionalNotes:
-            'Preferred work type: $_selectedWorkType. Language proficiency: $_selectedLanguage. Expected salary: $expectedSalary',
+        additionalNotes: 'Preferred work type: $_selectedWorkType. Language proficiency: $_selectedLanguage. Expected salary: $expectedSalary',
       );
 
       final success = await jobProvider.submitJobApplication(applicationData);
-
+      
       if (success) {
         // Show success message
         if (mounted) {
@@ -732,9 +722,7 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                'Error submitting application: ${jobProvider.error ?? 'Unknown error'}',
-              ),
+              content: Text('Error submitting application: ${jobProvider.error ?? 'Unknown error'}'),
               backgroundColor: Colors.red,
             ),
           );

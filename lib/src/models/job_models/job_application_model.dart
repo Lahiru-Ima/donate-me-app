@@ -6,24 +6,23 @@ class JobApplicationModel {
   final String email;
   final String phone;
   final String address;
-  final int age;
-  final String gender;
-  final String experience;
-  final List<String> skills;
-  final String availability;
-  final String motivation;
-  final List<String> referencesList;
-  final String emergencyContact;
-  final String emergencyPhone;
-  final String
-  status; // 'pending', 'reviewed', 'shortlisted', 'rejected', 'hired'
+  final int? age;
+  final String? gender;
+  final String? experience;
+  final List<String>? skills;
+  final String? availability;
+  final String? motivation;
+  final List<String>? referencesList;
+  final String? emergencyContact;
+  final String? emergencyPhone;
+  final String status; // 'pending', 'reviewed', 'shortlisted', 'rejected', 'hired'
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
   // Additional fields
   final String? previousEmployment;
   final String? healthConditions;
-  final bool hasTransportation;
+  final bool? hasTransportation;
   final String? additionalNotes;
 
   JobApplicationModel({
@@ -34,21 +33,21 @@ class JobApplicationModel {
     required this.email,
     required this.phone,
     required this.address,
-    required this.age,
-    required this.gender,
-    required this.experience,
-    required this.skills,
-    required this.availability,
-    required this.motivation,
-    required this.referencesList,
-    required this.emergencyContact,
-    required this.emergencyPhone,
+     this.age,
+  this.gender,
+    this.experience,
+    this.skills,
+    this.availability,
+    this.motivation,
+    this.referencesList,
+    this.emergencyContact,
+     this.emergencyPhone,
     this.status = 'pending',
     this.createdAt,
     this.updatedAt,
     this.previousEmployment,
     this.healthConditions,
-    required this.hasTransportation,
+    this.hasTransportation,
     this.additionalNotes,
   });
 

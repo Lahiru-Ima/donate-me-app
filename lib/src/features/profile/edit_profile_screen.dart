@@ -157,21 +157,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final authProvider = Provider.of<AuthenticationProvider>(context);
     Size size = MediaQuery.of(context).size;
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         elevation: 0,
         centerTitle: true,
+        backgroundColor: Colors.white,
         forceMaterialTransparency: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black54),
-          onPressed: () => context.pop(),
-        ),
+
         title: const Text(
           'Edit Profile',
-          style: TextStyle(
-            color: kPrimaryColor,
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
         ),
       ),
       body: _isLoading
@@ -252,11 +247,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   TextFormField(
                     controller: _nameController,
                     decoration: InputDecoration(
-                      filled: true,
-                      fillColor: kSecondaryColor,
+                      labelText: 'Full Name',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: kPrimaryColor),
                       ),
                     ),
                   ),
@@ -272,7 +269,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       color: Colors.black87,
                     ),
                   ),
-                  // Email (read-only)
                   const SizedBox(height: 8),
                   TextFormField(
                     readOnly: true,
@@ -280,12 +276,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       text: authProvider.userModel!.email,
                     ),
                     decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.grey[200],
+                      labelText: 'Email',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
                       ),
+                      filled: true,
+                      fillColor: Colors.grey[100],
                     ),
                   ),
 
@@ -305,11 +301,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
-                      filled: true,
-                      fillColor: kSecondaryColor,
+                      labelText: 'Mobile Number',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: kPrimaryColor),
                       ),
                     ),
                   ),
@@ -331,12 +329,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     controller: _dobController,
                     inputType: InputType.date,
                     decoration: InputDecoration(
-                      filled: true,
+                      labelText: 'Date Of Birth',
                       hintText: 'DD/MM/YYYY',
-                      fillColor: kSecondaryColor,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: kPrimaryColor),
                       ),
                     ),
                   ),
@@ -383,7 +383,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   const SizedBox(height: 30),
                   Center(
                     child: SizedBox(
-                      width: size.width * 0.5,
+                      width: size.width * 0.8,
                       child: PrimaryButton(
                         text: 'Save Changes',
                         press: _saveProfile,

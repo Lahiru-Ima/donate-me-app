@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:donate_me_app/src/providers/donation_registration_provider.dart';
+import 'package:donate_me_app/src/models/donation_models/donation_registration_model.dart';
+import 'package:donate_me_app/src/providers/auth_provider.dart';
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
@@ -8,40 +12,105 @@ class ScheduleScreen extends StatefulWidget {
 }
 
 class _ScheduleScreenState extends State<ScheduleScreen> {
-  final List<Map<String, dynamic>> scheduledDonations = [
-    {
-      'type': 'Blood Donation',
-      'date': '2025-07-15',
-      'time': '10:00 AM',
-      'location': 'Colombo Blood Bank',
-      'status': 'Confirmed',
-      'category': 'Blood',
-    },
-    {
-      'type': 'Hair Donation',
-      'date': '2025-07-20',
-      'time': '2:00 PM',
-      'location': 'Cancer Care Center - Kandy',
-      'status': 'Pending',
-      'category': 'Hair',
-    },
-    {
-      'type': 'Fund Donation',
-      'date': '2025-07-25',
-      'time': '11:00 AM',
-      'location': 'Community Center - Gampaha',
-      'status': 'Confirmed',
-      'category': 'Fund',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // Fetch user's donation registrations when screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchUserRegistrations();
+    });
+  }
+
+  Future<void> _fetchUserRegistrations() async {
+    final authProvider = Provider.of<AuthenticationProvider>(
+      context,
+      listen: false,
+    );
+    final donationProvider = Provider.of<DonationRegistrationProvider>(
+      context,
+      listen: false,
+    );
+
+    // Check if user is authenticated
+    if (authProvider.userModel?.id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('User not authenticated'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Fetch registrations using the authenticated user's ID
+    await donationProvider.fetchUserRegistrations(authProvider.userModel!.id);
+  }
+
+  void _editRegistration(DonationRegistrationModel registration) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Edit registration functionality will be implemented'),
+      ),
+    );
+  }
+
+  void _cancelRegistration(
+    DonationRegistrationModel registration,
+    DonationRegistrationProvider provider,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel Registration'),
+        content: Text(
+          'Are you sure you want to cancel your ${registration.category} donation registration?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('No'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await provider.deleteRegistration(registration.id!);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Registration cancelled successfully'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error cancelling registration: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Yes', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
 
   Color getStatusColor(String status) {
     switch (status.toLowerCase()) {
+      case 'approved':
       case 'confirmed':
+      case 'completed':
         return Colors.green;
       case 'pending':
         return Colors.orange;
       case 'cancelled':
+      case 'rejected':
         return Colors.red;
       default:
         return Colors.grey;
@@ -49,14 +118,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   IconData getCategoryIcon(String category) {
-    switch (category) {
-      case 'Blood':
+    switch (category.toLowerCase()) {
+      case 'blood':
         return Icons.bloodtype;
-      case 'Hair':
+      case 'hair':
         return Icons.content_cut;
-      case 'Kidney':
+      case 'kidney':
         return Icons.favorite;
-      case 'Fund':
+      case 'fund':
         return Icons.attach_money;
       default:
         return Icons.category;
@@ -78,113 +147,135 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             color: Colors.black,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.black),
+            onPressed: _fetchUserRegistrations,
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Upcoming Donations',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 16),
+      body: Consumer<DonationRegistrationProvider>(
+        builder: (context, provider, child) {
+          if (provider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            if (scheduledDonations.isNotEmpty)
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: scheduledDonations.length,
-                itemBuilder: (context, index) {
-                  final donation = scheduledDonations[index];
-                  return ScheduleCard(
-                    type: donation['type'],
-                    date: donation['date'],
-                    time: donation['time'],
-                    location: donation['location'],
-                    status: donation['status'],
-                    category: donation['category'],
-                    categoryIcon: getCategoryIcon(donation['category']),
-                    statusColor: getStatusColor(donation['status']),
-                    onEdit: () {
-                      // Handle edit schedule
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Edit schedule functionality'),
-                        ),
-                      );
-                    },
-                    onCancel: () {
-                      // Handle cancel schedule
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Cancel Donation'),
-                          content: const Text(
-                            'Are you sure you want to cancel this scheduled donation?',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('No'),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                setState(() {
-                                  scheduledDonations.removeAt(index);
-                                });
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Donation cancelled'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                              },
-                              child: const Text(
-                                'Yes',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                },
-              )
-            else
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 60),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.calendar_today,
-                        size: 64,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No scheduled donations',
-                        style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Schedule your donations to help those in need',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+          if (provider.error != null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading schedules',
+                    style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    provider.error!,
+                    style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _fetchUserRegistrations,
+                    child: const Text('Retry'),
+                  ),
+                ],
               ),
-          ],
-        ),
+            );
+          }
+
+          final registrations = provider.userRegistrations;
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Upcoming Donations',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    Text(
+                      '${registrations.length} total',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                if (registrations.isNotEmpty)
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: registrations.length,
+                    itemBuilder: (context, index) {
+                      final registration = registrations[index];
+                      return ScheduleCard(
+                        type: '${registration.category} Donation',
+                        date: registration.scheduledDate != null
+                            ? '${registration.scheduledDate!.day}/${registration.scheduledDate!.month}/${registration.scheduledDate!.year}'
+                            : '${registration.createdAt.day}/${registration.createdAt.month}/${registration.createdAt.year}',
+                        time: registration.scheduledDate != null
+                            ? '${registration.scheduledDate!.hour.toString().padLeft(2, '0')}:${registration.scheduledDate!.minute.toString().padLeft(2, '0')}'
+                            : 'Not specified',
+                        location:
+                            registration.address ?? 'Location not specified',
+                        status: registration.status,
+                        category: registration.category,
+                        categoryIcon: getCategoryIcon(registration.category),
+                        statusColor: getStatusColor(registration.status),
+                        onEdit: () => _editRegistration(registration),
+                        onCancel: () =>
+                            _cancelRegistration(registration, provider),
+                      );
+                    },
+                  )
+                else
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 60),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No donation registrations',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Register for donations to help those in need',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[500],
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

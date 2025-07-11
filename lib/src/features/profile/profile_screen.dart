@@ -111,16 +111,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildTabItem(Icons.person_outline, 'Profile', () {}),
-                        _buildTabItem(
-                          Icons.post_add_outlined,
-                          'My Posts',
-                          () => _showCreatePostDialog(),
-                        ),
+                        _buildTabItem(Icons.person_outline, 'Profile', () {
+                          context.push(RouterNames.editProfile);
+                        }),
+                        _buildTabItem(Icons.post_add_outlined, 'My Posts', () {
+                          context.push(RouterNames.myPosts);
+                        }),
                         _buildTabItem(
                           Icons.account_balance_wallet_outlined,
                           'Wallet',
-                          () {},
+                          () {
+                            context.push(RouterNames.wallet);
+                          },
                         ),
                       ],
                     ),
@@ -129,30 +131,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 10),
 
                   // Menu Items
-                  _buildMenuItem(
-                    Icons.post_add_outlined,
-                    'My Posts',
-                    () => _showCreatePostDialog(),
-                  ),
-                  _buildMenuItem(
-                    Icons.privacy_tip_outlined,
-                    'Privacy Policy',
-                    () {},
-                  ),
-                  _buildMenuItem(
-                    Icons.payment_outlined,
-                    'Payment Methods',
-                    () {},
-                  ),
-                  _buildMenuItem(
-                    Icons.notifications_outlined,
-                    'Notification',
-                    () {},
-                  ),
+                  _buildMenuItem(Icons.post_add_outlined, 'My Posts', () {
+                    context.push(RouterNames.myPosts);
+                  }),
+
                   _buildMenuItem(Icons.settings_outlined, 'Settings', () {
                     context.push(RouterNames.settings);
                   }),
-                  _buildMenuItem(Icons.help_outline, 'Help', () {}),
+                  _buildMenuItem(Icons.help_outline, 'Help', () {
+                    context.push(RouterNames.help);
+                  }),
                   _buildMenuItem(Icons.logout, 'Logout', () {
                     _logout(context);
                   }),
@@ -208,121 +196,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       },
-    );
-  }
-
-  void _showCreatePostDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(
-            'Create Donation Request',
-            style: TextStyle(fontWeight: FontWeight.bold, color: kPrimaryColor),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildCreatePostOption(
-                context,
-                'Blood',
-                Icons.bloodtype,
-                kBloodColor,
-                'Request blood donation',
-                () => context.push(RouterNames.createBloodPost),
-              ),
-              const SizedBox(height: 12),
-              _buildCreatePostOption(
-                context,
-                'Hair',
-                Icons.content_cut,
-                Colors.brown,
-                'Request hair donation',
-                () => context.push(RouterNames.createHairPost),
-              ),
-              const SizedBox(height: 12),
-              _buildCreatePostOption(
-                context,
-                'Kidney',
-                Icons.favorite,
-                Colors.green,
-                'Request kidney donation',
-                () => context.push(RouterNames.createKidneyPost),
-              ),
-              const SizedBox(height: 12),
-              _buildCreatePostOption(
-                context,
-                'Fund',
-                Icons.attach_money,
-                Colors.orange,
-                'Request financial assistance',
-                () => context.push(RouterNames.createFundPost),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel', style: TextStyle(color: Colors.grey[600])),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildCreatePostOption(
-    BuildContext context,
-    String title,
-    IconData icon,
-    Color color,
-    String subtitle,
-    VoidCallback onTap,
-  ) {
-    return InkWell(
-      onTap: () {
-        Navigator.pop(context); // Close dialog first
-        onTap();
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300]!),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey[600]),
-          ],
-        ),
-      ),
     );
   }
 

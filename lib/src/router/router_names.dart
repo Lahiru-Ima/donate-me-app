@@ -31,4 +31,7 @@ class RouterNames {
   // Profile screens
   static const String editProfile = '/profile/edit';
   static const String settings = '/settings';
+  static const String myPosts = '/my-posts';
+  static const String wallet = '/wallet';
+  static const String help = '/help';
 }

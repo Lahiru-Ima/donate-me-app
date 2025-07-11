@@ -23,12 +23,13 @@ class DonationRequestService {
     }
   }
 
-  // Get all blood requests
+  // Get all approved blood requests
   Future<List<BloodRequestModel>> getAllBloodRequests() async {
     try {
       final response = await _supabase
           .from('blood_requests')
           .select()
+          .eq('status', 'approved')
           .order('created_at', ascending: false);
 
       return (response as List)
@@ -73,12 +74,13 @@ class DonationRequestService {
     }
   }
 
-  // Get all hair requests
+  // Get all approved hair requests
   Future<List<HairRequestModel>> getAllHairRequests() async {
     try {
       final response = await _supabase
           .from('hair_requests')
           .select()
+          .eq('status', 'approved')
           .order('created_at', ascending: false);
 
       return (response as List)
@@ -121,12 +123,13 @@ class DonationRequestService {
     }
   }
 
-  // Get all kidney requests
+  // Get all approved kidney requests
   Future<List<KidneyRequestModel>> getAllKidneyRequests() async {
     try {
       final response = await _supabase
           .from('kidney_requests')
           .select()
+          .eq('status', 'approved')
           .order('created_at', ascending: false);
 
       return (response as List)
@@ -171,12 +174,13 @@ class DonationRequestService {
     }
   }
 
-  // Get all fund requests
+  // Get all approved fund requests
   Future<List<FundRequestModel>> getAllFundRequests() async {
     try {
       final response = await _supabase
           .from('fund_requests')
           .select()
+          .eq('status', 'approved')
           .order('created_at', ascending: false);
 
       return (response as List)
@@ -204,7 +208,7 @@ class DonationRequestService {
     }
   }
 
-  // Get fund requests by type (medical or charity)
+  // Get approved fund requests by type (medical or charity)
   Future<List<FundRequestModel>> getFundRequestsByType(
     String requestType,
   ) async {
@@ -213,6 +217,7 @@ class DonationRequestService {
           .from('fund_requests')
           .select()
           .eq('request_type', requestType)
+          .eq('status', 'approved')
           .order('created_at', ascending: false);
 
       return (response as List)

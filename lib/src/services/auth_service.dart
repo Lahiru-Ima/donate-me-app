@@ -61,7 +61,6 @@ class AuthService {
       }
       throw AuthException(errorMessage);
     } catch (e) {
-      print('Error : ${e.toString()}');
       if (e.toString().contains('relation "public.users" does not exist')) {
         throw AuthException(
           'Database setup incomplete. Please contact support to set up the database.',
@@ -186,7 +185,7 @@ class AuthService {
     try {
       await _supabase.auth.resetPasswordForEmail(
         email,
-        redirectTo: 'your-app://reset-password', // You can customize this URL
+        redirectTo: 'your-app://reset-password', 
       );
     } catch (e) {
       throw AuthException(

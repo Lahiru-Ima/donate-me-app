@@ -1,5 +1,6 @@
 import 'package:donate_me_app/l10n/app_localizations.dart';
 import 'package:donate_me_app/src/providers/auth_provider.dart';
+import 'package:donate_me_app/src/providers/donation_request_provider.dart';
 import 'package:donate_me_app/src/providers/locale_provider.dart';
 import 'package:donate_me_app/src/providers/wishlist_provider.dart';
 import 'package:donate_me_app/src/router/router.dart';
@@ -31,10 +32,11 @@ class MainApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthenticationProvider()),
         ChangeNotifierProvider(create: (_) => WishlistProvider()),
+        ChangeNotifierProvider(create: (_) => DonationRequestProvider()),
         ChangeNotifierProvider(
           create: (_) {
             final provider = LocaleProvider();
-            provider.initializeLocale(); // Initialize locale immediately
+            provider.initializeLocale();
             return provider;
           },
         ),

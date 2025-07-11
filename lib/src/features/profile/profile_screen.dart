@@ -33,18 +33,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final authProvider = Provider.of<AuthenticationProvider>(context);
     return Scaffold(
       backgroundColor: Colors.grey[100],
+
       appBar: AppBar(
         forceMaterialTransparency: true,
-        elevation: 0,
+
         automaticallyImplyLeading: false,
-        centerTitle: true,
+
         title: const Text(
           'My Profile',
-          style: TextStyle(color: kPrimaryColor, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit, color: kPrimaryColor),
+            icon: const Icon(Icons.edit),
             onPressed: () {
               context.push(RouterNames.editProfile);
             },

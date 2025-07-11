@@ -2,20 +2,148 @@ import 'package:donate_me_app/src/constants/constants.dart';
 import 'package:flutter/material.dart';
 
 class DonationDetailsScreen extends StatelessWidget {
-  final String type;
-  final String location;
-  final String description;
-  final bool isUrgent;
-  final String category;
+  final Map<String, dynamic> requestData;
 
-  const DonationDetailsScreen({
-    super.key,
-    required this.type,
-    required this.location,
-    required this.description,
-    required this.isUrgent,
-    required this.category,
-  });
+  const DonationDetailsScreen({super.key, required this.requestData});
+
+  String get type => requestData['type'] ?? 'Unknown';
+  String get location => requestData['location'] ?? 'Unknown Location';
+  String get description =>
+      requestData['description'] ?? 'No description available';
+  bool get isUrgent => requestData['is_emergency'] ?? false;
+  String get category => requestData['category'] ?? 'Unknown';
+  String get id => requestData['id'] ?? '';
+
+  List<Map<String, String>> get dynamicRequirements {
+    switch (category.toLowerCase()) {
+      case 'blood':
+        return [
+          {
+            'icon': '🩸',
+            'requirement':
+                'Blood Group: ${requestData['blood_group'] ?? 'Not specified'}',
+          },
+          {
+            'icon': '🏥',
+            'requirement':
+                'Hospital: ${requestData['hospital'] ?? 'Not specified'}',
+          },
+          {
+            'icon': '👤',
+            'requirement':
+                'Patient: ${requestData['patient_name'] ?? 'Not specified'}',
+          },
+          {
+            'icon': '📅',
+            'requirement':
+                'Age: ${requestData['patient_age'] ?? 'Not specified'}',
+          },
+          {
+            'icon': '🍽️',
+            'requirement':
+                'Medical Condition: ${requestData['medical_condition'] ?? 'Not specified'}',
+          },
+        ];
+      case 'hair':
+        return [
+          {
+            'icon': '✂️',
+            'requirement':
+                'Hair Type: ${requestData['hairType'] ?? 'Not specified'}',
+          },
+          {
+            'icon': '🎨',
+            'requirement':
+                'Hair Color: ${requestData['hairColor'] ?? 'Not specified'}',
+          },
+          {
+            'icon': '📏',
+            'requirement':
+                'Min Length: ${requestData['minLength'] ?? 'Not specified'} inches',
+          },
+          {
+            'icon': '📦',
+            'requirement':
+                'Collection: ${requestData['collectionMethod'] ?? 'Not specified'}',
+          },
+          {
+            'icon': '🎯',
+            'requirement':
+                'Purpose: ${requestData['purpose'] ?? 'Not specified'}',
+          },
+        ];
+      case 'kidney':
+        return [
+          {
+            'icon': '🫘',
+            'requirement':
+                'Kidney Type: ${requestData['kidneyType'] ?? 'Not specified'}',
+          },
+          {
+            'icon': '🔬',
+            'requirement':
+                'Stage: ${requestData['kidneyFailureStage'] ?? 'Not specified'}',
+          },
+          {
+            'icon': '💉',
+            'requirement':
+                'Dialysis: ${requestData['dialysisFrequency'] ?? 'Not specified'}',
+          },
+          {
+            'icon': '🧬',
+            'requirement':
+                'Blood Group: ${requestData['bloodGroup'] ?? 'Not specified'}',
+          },
+          {
+            'icon': '⚡',
+            'requirement':
+                'Urgency: ${requestData['urgencyLevel'] ?? 'Not specified'}',
+          },
+        ];
+      case 'fund':
+        return [
+          {
+            'icon': '💰',
+            'requirement':
+                'Amount Needed: \$${requestData['amountNeeded'] ?? 'Not specified'}',
+          },
+          {
+            'icon': '📄',
+            'requirement':
+                'Request Type: ${requestData['requestType'] ?? 'Not specified'}',
+          },
+          {
+            'icon': '🏥',
+            'requirement':
+                'For: ${requestData['patientName'] ?? requestData['beneficiaryName'] ?? 'Not specified'}',
+          },
+          {
+            'icon': '📅',
+            'requirement':
+                'Deadline: ${requestData['deadline'] ?? 'Not specified'}',
+          },
+          {
+            'icon': '📋',
+            'requirement':
+                'Purpose: ${requestData['purpose'] ?? 'Not specified'}',
+          },
+        ];
+      default:
+        return [
+          {'icon': '❓', 'requirement': 'No specific requirements available'},
+        ];
+    }
+  }
+
+  Map<String, String> get dynamicContactInfo {
+    return {
+      'coordinator': '$category Request Coordinator',
+      'name': requestData['contact_person'] ?? 'Contact Person',
+      'phone': requestData['contact_phone'] ?? '+94 77 XXX XXXX',
+      'email': requestData['contact_email'] ?? 'contact@donate.lk',
+      'time': isUrgent ? 'Urgent - Call Anytime' : 'Available 8 AM - 6 PM',
+    };
+  }
 
   List<String> get requirements {
     switch (type.toLowerCase()) {
@@ -308,8 +436,8 @@ class DonationDetailsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  ...requirements.map(
-                    (requirement) => _buildRequirementItem(requirement),
+                  ...dynamicRequirements.map(
+                    (requirement) => _buildDynamicRequirementItem(requirement),
                   ),
                 ],
               ),
@@ -347,23 +475,23 @@ class DonationDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   _buildContactItem(
                     Icons.person,
-                    contactInfo['coordinator']!,
-                    contactInfo['name']!,
+                    dynamicContactInfo['coordinator']!,
+                    dynamicContactInfo['name']!,
                   ),
                   _buildContactItem(
                     Icons.phone,
                     'Phone Number',
-                    contactInfo['phone']!,
+                    dynamicContactInfo['phone']!,
                   ),
                   _buildContactItem(
                     Icons.email,
                     'Email',
-                    contactInfo['email']!,
+                    dynamicContactInfo['email']!,
                   ),
                   _buildContactItem(
                     Icons.access_time,
                     'Available Time',
-                    contactInfo['time']!,
+                    dynamicContactInfo['time']!,
                   ),
                 ],
               ),
@@ -447,16 +575,21 @@ class DonationDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRequirementItem(String requirement) {
+  Widget _buildDynamicRequirementItem(Map<String, String> requirement) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Icon(Icons.check_circle, color: Colors.green, size: 18),
-          const SizedBox(width: 12),
           Text(
-            requirement,
-            style: const TextStyle(fontSize: 14, color: Colors.black87),
+            requirement['icon'] ?? '✓',
+            style: const TextStyle(fontSize: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              requirement['requirement'] ?? 'No requirement specified',
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
+            ),
           ),
         ],
       ),

@@ -1,5 +1,9 @@
+import 'package:donate_me_app/src/models/blood_request_model.dart';
+import 'package:donate_me_app/src/providers/donation_request_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:donate_me_app/src/constants/constants.dart';
+import 'package:donate_me_app/src/providers/auth_provider.dart';
+import 'package:provider/provider.dart';
 
 class CreateBloodPostScreen extends StatefulWidget {
   const CreateBloodPostScreen({super.key});
@@ -85,19 +89,160 @@ class _CreateBloodPostScreenState extends State<CreateBloodPostScreen> {
     }
   }
 
-  void _submitPost() {
+  Future<void> _submitPost() async {
     if (_formKey.currentState!.validate()) {
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Blood donation request posted successfully! Your request will be reviewed and published.',
+      // Validate required fields
+      if (_selectedBloodGroup.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select a blood group'),
+            backgroundColor: Colors.red,
           ),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 4),
-        ),
+        );
+        return;
+      }
+
+      if (_selectedGender.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select gender'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (_urgencyLevel.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select urgency level'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final authProvider = Provider.of<AuthenticationProvider>(
+        context,
+        listen: false,
       );
-      Navigator.pop(context);
+      final requestProvider = Provider.of<DonationRequestProvider>(
+        context,
+        listen: false,
+      );
+
+      if (authProvider.userModel?.id == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User not authenticated'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      try {
+        // Parse the required by date
+        DateTime requiredByDate = DateTime.now().add(const Duration(days: 1));
+        if (_requiredByDateController.text.isNotEmpty) {
+          final parts = _requiredByDateController.text.split('/');
+          if (parts.length == 3) {
+            requiredByDate = DateTime(
+              int.parse(parts[2]), // year
+              int.parse(parts[1]), // month
+              int.parse(parts[0]), // day
+            );
+          }
+        }
+
+        // Create blood donation request model
+        final bloodRequest = BloodRequestModel(
+          userId: authProvider.userModel!.id,
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim(),
+          location: _locationController.text.trim(),
+          hospital: _hospitalController.text.trim(),
+          patientName: _patientNameController.text.trim(),
+          patientAge: int.parse(_patientAgeController.text.trim()),
+          bloodGroup: _selectedBloodGroup,
+          gender: _selectedGender,
+          unitsNeeded: int.parse(_unitsNeededController.text.trim()),
+          urgencyLevel: _urgencyLevel,
+          requiredByDate: requiredByDate,
+          medicalCondition: _medicalConditionController.text.trim(),
+          doctorName: _doctorNameController.text.trim(),
+          contactPerson: _contactPersonController.text.trim(),
+          contactPhone: _contactPhoneController.text.trim(),
+          contactEmail: _contactEmailController.text.trim(),
+          isEmergency: _isEmergency,
+          additionalNotes: _additionalNotesController.text.trim().isEmpty
+              ? null
+              : _additionalNotesController.text.trim(),
+        );
+
+        // Show loading dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(color: kBloodColor),
+          ),
+        );
+
+        // Create the blood request
+        final success = await requestProvider.createBloodRequest(
+          bloodRequest,
+        );
+
+        // Hide loading dialog
+        if (mounted) Navigator.of(context).pop();
+
+        if (success) {
+          // Show success message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Blood donation request posted successfully! Your request will be reviewed and published.',
+                ),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 4),
+              ),
+            );
+            Navigator.pop(context);
+          }
+        } else {
+          // Show error message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                 requestProvider.error ??
+                      'Failed to create blood request',
+                ),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        // Hide loading dialog if still showing
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error creating request: ${e.toString()}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -491,6 +636,14 @@ class _CreateBloodPostScreenState extends State<CreateBloodPostScreen> {
               );
             }).toList(),
           ),
+          if (_selectedBloodGroup.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Please select a blood group',
+                style: TextStyle(fontSize: 12, color: Colors.red[600]),
+              ),
+            ),
         ],
       ),
     );
@@ -531,6 +684,14 @@ class _CreateBloodPostScreenState extends State<CreateBloodPostScreen> {
               );
             }).toList(),
           ),
+          if (_selectedGender.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Please select gender',
+                style: TextStyle(fontSize: 12, color: Colors.red[600]),
+              ),
+            ),
         ],
       ),
     );
@@ -589,6 +750,14 @@ class _CreateBloodPostScreenState extends State<CreateBloodPostScreen> {
               );
             }).toList(),
           ),
+          if (_urgencyLevel.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Please select urgency level',
+                style: TextStyle(fontSize: 12, color: Colors.red[600]),
+              ),
+            ),
         ],
       ),
     );

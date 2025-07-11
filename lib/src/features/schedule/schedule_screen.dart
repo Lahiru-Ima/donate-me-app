@@ -78,12 +78,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             color: Colors.black,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.add, color: Colors.red),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

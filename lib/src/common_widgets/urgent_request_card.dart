@@ -5,18 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class UrgentRequestCard extends StatelessWidget {
-  final String type;
-  final String location;
-  final String description;
-  final String category;
+  final Map<String, dynamic> request;
   final VoidCallback? onWishlistToggle;
 
   const UrgentRequestCard({
     super.key,
-    required this.type,
-    required this.location,
-    required this.description,
-    required this.category,
+    required this.request,
     this.onWishlistToggle,
   });
 
@@ -24,16 +18,7 @@ class UrgentRequestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-       context.push(
-          RouterNames.donationDetails,
-          extra: {
-            'type': type,
-            'location': location,
-            'description': description,
-            'isUrgent': false,
-            'category': category,
-          },
-        );
+        context.push(RouterNames.donationDetails, extra: request);
       },
       child: Container(
         padding: EdgeInsets.all(12),
@@ -52,6 +37,7 @@ class UrgentRequestCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Flexible(
                   child: Container(
@@ -61,7 +47,7 @@ class UrgentRequestCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      type,
+                      request['title'].toString().toUpperCase(),
                       style: TextStyle(
                         color: Colors.red[700],
                         fontSize: 12,
@@ -76,8 +62,8 @@ class UrgentRequestCard extends StatelessWidget {
                   Consumer<WishlistProvider>(
                     builder: (context, wishlistProvider, child) {
                       final isInWishlist = wishlistProvider.isInWishlist(
-                        type,
-                        location,
+                        request['type'],
+                        request['location'],
                       );
                       return GestureDetector(
                         onTap: onWishlistToggle,
@@ -104,7 +90,7 @@ class UrgentRequestCard extends StatelessWidget {
                 SizedBox(width: 4),
                 Expanded(
                   child: Text(
-                    location,
+                    request['location'],
                     style: TextStyle(color: Colors.grey[600], fontSize: 12),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -114,7 +100,7 @@ class UrgentRequestCard extends StatelessWidget {
             SizedBox(height: 8),
             Flexible(
               child: Text(
-                description,
+                request['description'],
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.black87,
@@ -129,32 +115,44 @@ class UrgentRequestCard extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  if (category.toLowerCase() == 'blood') {
-                    context.push(RouterNames.bloodDonation, extra: {
-                      'type': type,
-                      'location': location,
-                      'description': description,
-                    });
-                  } else if (category.toLowerCase() == 'hair') {
-                    context.push(RouterNames.hairDonation, extra: {
-                      'type': type,
-                      'location': location,
-                      'description': description,
-                    });
-                  } else if (category.toLowerCase() == 'kidney') {
-                    context.push(RouterNames.kidneyDonation, extra: {
-                      'type': type,
-                      'location': location,
-                      'description': description,
-                    });
-                  } else if (category.toLowerCase() == 'fund') {
-                    context.push(RouterNames.fundDonation, extra: {
-                      'type': type,
-                      'location': location,
-                      'description': description,
-                      'isUrgent': true,
-                      'category': category,
-                    });
+                  if (request['category'].toLowerCase() == 'blood') {
+                    context.push(
+                      RouterNames.bloodDonation,
+                      extra: {
+                        'type': request['type'],
+                        'location': request['location'],
+                        'description': request['description'],
+                      },
+                    );
+                  } else if (request['category'].toLowerCase() == 'hair') {
+                    context.push(
+                      RouterNames.hairDonation,
+                      extra: {
+                        'type': request['type'],
+                        'location': request['location'],
+                        'description': request['description'],
+                      },
+                    );
+                  } else if (request['category'].toLowerCase() == 'kidney') {
+                    context.push(
+                      RouterNames.kidneyDonation,
+                      extra: {
+                        'type': request['type'],
+                        'location': request['location'],
+                        'description': request['description'],
+                      },
+                    );
+                  } else if (request['category'].toLowerCase() == 'fund') {
+                    context.push(
+                      RouterNames.fundDonation,
+                      extra: {
+                        'type': request['type'],
+                        'location': request['location'],
+                        'description': request['description'],
+                        'isUrgent': request['isUrgent'] ?? false,
+                        'category': request['category'],
+                      },
+                    );
                   }
                 },
                 style: ElevatedButton.styleFrom(

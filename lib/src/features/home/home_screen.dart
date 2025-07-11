@@ -2,6 +2,7 @@ import 'package:donate_me_app/src/common_widgets/urgent_request_card.dart';
 import 'package:donate_me_app/src/constants/constants.dart';
 import 'package:donate_me_app/src/common_widgets/community_request_card.dart';
 import 'package:donate_me_app/src/providers/auth_provider.dart';
+import 'package:donate_me_app/src/providers/donation_request_provider.dart';
 import 'package:donate_me_app/src/providers/wishlist_provider.dart';
 import 'package:donate_me_app/src/router/router_names.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,21 @@ class _HomeScreenState extends State<HomeScreen> {
   String? selectedCategory = 'Blood';
   final List<String> categories = ['Blood', 'Hair', 'Kidney', 'Fund'];
 
+  @override
+  void initState() {
+    super.initState();
+    // Load initial data for default category
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final donationProvider = Provider.of<DonationRequestProvider>(
+        context,
+        listen: false,
+      );
+      if (selectedCategory != null) {
+        donationProvider.loadRequestsByCategory(selectedCategory!);
+      }
+    });
+  }
+
   // Get localized category name
   String getLocalizedCategoryName(String category, AppLocalizations l10n) {
     switch (category) {
@@ -36,75 +52,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Sample data for different categories
-  final Map<String, List<Map<String, dynamic>>> categoryData = {
-    'Blood': [
-      {
-        'type': 'A- Blood Needed',
-        'location': 'Kurunegala',
-        'description':
-            'Urgent need for A- blood donation to support a medical emergency.',
-        'isUrgent': true,
-      },
-      {
-        'type': 'O+ Blood Needed',
-        'location': 'Colombo',
-        'description': 'Blood donation needed for surgery patient.',
-        'isUrgent': true,
-      },
-      {
-        'type': 'B+ Blood Needed',
-        'location': 'Kandy',
-        'description': 'Regular blood donation needed for thalassemia patient.',
-        'isUrgent': false,
-      },
-    ],
-    'Hair': [
-      {
-        'type': 'Long Hair Donation Needed',
-        'location': 'Colombo',
-        'description':
-            'Urgent: Hair donation needed for cancer patients wigs at Maharagama Cancer Hospital.',
-        'isUrgent': true,
-      },
-      {
-        'type': 'Natural Hair Donation',
-        'location': 'Kandy',
-        'description':
-            'Natural hair donation needed for children with alopecia support.',
-        'isUrgent': false,
-      },
-      {
-        'type': 'Curly Hair Needed',
-        'location': 'Galle',
-        'description': 'Specific curly hair type needed for custom wig making.',
-        'isUrgent': false,
-      },
-    ],
-    'Kidney': [
-      {
-        'type': 'Kidney Donor Needed',
-        'location': 'Colombo General',
-        'description': 'Urgent kidney donation needed for critical patient.',
-        'isUrgent': true,
-      },
-    ],
-    'Fund': [
-      {
-        'type': 'Medical Fund',
-        'location': 'Kandy',
-        'description': 'Financial support needed for heart surgery.',
-        'isUrgent': true,
-      },
-      {
-        'type': 'Education Fund',
-        'location': 'Gampaha',
-        'description': 'Educational support for underprivileged children.',
-        'isUrgent': false,
-      },
-    ],
-  };
-
   // Get icon for each category
   IconData getCategoryIcon(String category) {
     switch (category) {
@@ -119,42 +66,6 @@ class _HomeScreenState extends State<HomeScreen> {
       default:
         return Icons.category;
     }
-  }
-
-  // Get category color
-  Color _getCategoryColor(String category) {
-    switch (category) {
-      case 'Blood':
-        return kBloodColor;
-      case 'Hair':
-        return Colors.brown;
-      case 'Kidney':
-        return Colors.green;
-      case 'Fund':
-        return Colors.orange;
-      default:
-        return kPrimaryColor;
-    }
-  }
-
-  // Get filtered data based on selected category
-  List<Map<String, dynamic>> getFilteredData() {
-    if (selectedCategory == null) {
-      return [];
-    }
-    return categoryData[selectedCategory] ?? [];
-  }
-
-  // Get urgent requests for selected category
-  List<Map<String, dynamic>> getUrgentRequests() {
-    return getFilteredData().where((item) => item['isUrgent'] == true).toList();
-  }
-
-  // Get community requests for selected category
-  List<Map<String, dynamic>> getCommunityRequests() {
-    return getFilteredData()
-        .where((item) => item['isUrgent'] == false)
-        .toList();
   }
 
   void _showCreatePostDialog(BuildContext context) {
@@ -279,23 +190,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _navigateToCreatePost(String category) {
-    switch (category) {
-      case 'Blood':
-        context.push(RouterNames.createBloodPost);
-        break;
-      case 'Hair':
-        context.push(RouterNames.createHairPost);
-        break;
-      case 'Kidney':
-        context.push(RouterNames.createKidneyPost);
-        break;
-      case 'Fund':
-        context.push(RouterNames.createFundPost);
-        break;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthenticationProvider>(
@@ -345,228 +239,315 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreatePostDialog(context),
         backgroundColor: kPrimaryColor,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: Text(
-          l10n.createRequest,
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        ),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.categories,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 100,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: categories.map((category) {
-                  return _buildCategoryItem(
-                    getLocalizedCategoryName(category, l10n),
-                    getCategoryIcon(category),
-                    isSelected: selectedCategory == category,
-                    onPressed: () {
-                      setState(() {
-                        selectedCategory = category;
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Show content only if category is selected
-            if (selectedCategory != null) ...[
-              // Create Request Button for selected category
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 16),
-                child: ElevatedButton.icon(
-                  onPressed: () => _navigateToCreatePost(selectedCategory!),
-                  icon: const Icon(Icons.add, color: Colors.white),
-                  label: Text(
-                    '${l10n.createRequest} ${getLocalizedCategoryName(selectedCategory!, l10n)}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+      body: Consumer<DonationRequestProvider>(
+        builder: (context, donationProvider, child) {
+          return RefreshIndicator(
+            onRefresh: () async {
+              if (selectedCategory != null) {
+                await donationProvider.loadRequestsByCategory(
+                  selectedCategory!,
+                );
+              }
+            },
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.categories,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _getCategoryColor(selectedCategory!),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 100,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: categories.map((category) {
+                        return _buildCategoryItem(
+                          getLocalizedCategoryName(category, l10n),
+                          getCategoryIcon(category),
+                          isSelected: selectedCategory == category,
+                          onPressed: () {
+                            setState(() {
+                              selectedCategory = category;
+                            });
+                            donationProvider.loadRequestsByCategory(category);
+                          },
+                        );
+                      }).toList(),
                     ),
                   ),
-                ),
-              ),
+                  const SizedBox(height: 24),
 
-              // Urgent Requests Section
-              if (getUrgentRequests().isNotEmpty) ...[
-                Text(
-                  l10n.urgentRequests,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 170,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: getUrgentRequests().length,
-                    itemBuilder: (context, index) {
-                      final request = getUrgentRequests()[index];
-                      return Container(
-                        width: 200,
-                        margin: const EdgeInsets.only(right: 12),
-                        child: UrgentRequestCard(
-                          type: request['type'],
-                          location: request['location'],
-                          description: request['description'],
-                          category: selectedCategory ?? '',
-                          onWishlistToggle: () {
-                            final wishlistProvider =
-                                Provider.of<WishlistProvider>(
-                                  context,
-                                  listen: false,
-                                );
+                  // Show loading indicator
+                  if (donationProvider.isLoading)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 40),
+                        child: CircularProgressIndicator(color: kPrimaryColor),
+                      ),
+                    )
+                  // Show error message
+                  else if (donationProvider.error != null)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 40),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: 48,
+                              color: Colors.red[300],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Failed to load requests',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              donationProvider.error!,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[500],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () {
+                                donationProvider.clearError();
+                                if (selectedCategory != null) {
+                                  donationProvider.loadRequestsByCategory(
+                                    selectedCategory!,
+                                  );
+                                }
+                              },
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  // Show content only if category is selected and no error
+                  else if (selectedCategory != null) ...[             
 
-                            final item = {
-                              'type': request['type'],
-                              'location': request['location'],
-                              'description': request['description'],
-                              'category': selectedCategory ?? '',
-                              'isUrgent': true,
-                            };
+                    // Urgent Requests Section
+                    if (donationProvider
+                        .getUrgentRequestsByCategory(selectedCategory)
+                        .isNotEmpty) ...[
+                      Text(
+                        l10n.urgentRequests,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 170,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: donationProvider
+                              .getUrgentRequestsByCategory(selectedCategory)
+                              .length,
+                          itemBuilder: (context, index) {
+                            final request = donationProvider
+                                .getUrgentRequestsByCategory(
+                                  selectedCategory,
+                                )[index];
+                            return Container(
+                              width: 200,
+                              margin: const EdgeInsets.only(right: 12),
+                              child: UrgentRequestCard(
+                                request: request,
+                                onWishlistToggle: () {
+                                  final wishlistProvider =
+                                      Provider.of<WishlistProvider>(
+                                        context,
+                                        listen: false,
+                                      );
 
-                            wishlistProvider.toggleWishlist(item);
+                                  final item = {
+                                    'type': request['type'],
+                                    'location': request['location'],
+                                    'description': request['description'],
+                                    'category': request['category'],
+                                    'isUrgent': request['isUrgent'],
+                                  };
 
-                            // Show feedback to user
-                            final isInWishlist = wishlistProvider.isInWishlist(
-                              request['type'],
-                              request['location'],
-                            );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  isInWishlist
-                                      ? 'Added to wishlist'
-                                      : 'Removed from wishlist',
-                                ),
-                                backgroundColor: isInWishlist
-                                    ? Colors.green
-                                    : Colors.red,
+                                  wishlistProvider.toggleWishlist(item);
+
+                                  // Show feedback to user
+                                  final isInWishlist = wishlistProvider
+                                      .isInWishlist(
+                                        request['type'],
+                                        request['location'],
+                                      );
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        isInWishlist
+                                            ? 'Added to wishlist'
+                                            : 'Removed from wishlist',
+                                      ),
+                                      backgroundColor: isInWishlist
+                                          ? Colors.green
+                                          : Colors.red,
+                                    ),
+                                  );
+                                },
                               ),
                             );
                           },
                         ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 24),
-              ],
+                      ),
+                      const SizedBox(height: 24),
+                    ],
 
-              // Community Requests Section
-              if (getCommunityRequests().isNotEmpty) ...[
-                Text(
-                  l10n.communityRequests,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: getCommunityRequests().length,
-                  itemBuilder: (context, index) {
-                    final request = getCommunityRequests()[index];
-                    return CommunityRequestCard(
-                      type: request['type'],
-                      location: request['location'],
-                      description: request['description'],
-                      category: selectedCategory ?? '',
-                      onWishlistToggle: () {
-                        final wishlistProvider = Provider.of<WishlistProvider>(
-                          context,
-                          listen: false,
-                        );
+                    // Community Requests Section
+                    if (donationProvider
+                        .getCommunityRequestsByCategory(selectedCategory)
+                        .isNotEmpty) ...[
+                      Text(
+                        l10n.communityRequests,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: donationProvider
+                            .getCommunityRequestsByCategory(selectedCategory)
+                            .length,
+                        itemBuilder: (context, index) {
+                          final request = donationProvider
+                              .getCommunityRequestsByCategory(
+                                selectedCategory,
+                              )[index];
+                          return CommunityRequestCard(
+                            type: request['type'],
+                            location: request['location'],
+                            description: request['description'],
+                            category: request['category'],
+                            onWishlistToggle: () {
+                              final wishlistProvider =
+                                  Provider.of<WishlistProvider>(
+                                    context,
+                                    listen: false,
+                                  );
 
-                        final item = {
-                          'type': request['type'],
-                          'location': request['location'],
-                          'description': request['description'],
-                          'category': selectedCategory ?? '',
-                          'isUrgent': false,
-                        };
+                              final item = {
+                                'type': request['type'],
+                                'location': request['location'],
+                                'description': request['description'],
+                                'category': request['category'],
+                                'isUrgent': request['isUrgent'],
+                              };
 
-                        wishlistProvider.toggleWishlist(item);
+                              wishlistProvider.toggleWishlist(item);
 
-                        // Show feedback to user
-                        final isInWishlist = wishlistProvider.isInWishlist(
-                          request['type'],
-                          request['location'],
-                        );
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              isInWishlist
-                                  ? 'Added to wishlist'
-                                  : 'Removed from wishlist',
-                            ),
-                            backgroundColor: isInWishlist
-                                ? Colors.green
-                                : Colors.red,
+                              // Show feedback to user
+                              final isInWishlist = wishlistProvider
+                                  .isInWishlist(
+                                    request['type'],
+                                    request['location'],
+                                  );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    isInWishlist
+                                        ? 'Added to wishlist'
+                                        : 'Removed from wishlist',
+                                  ),
+                                  backgroundColor: isInWishlist
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
+
+                    // Show message if no requests available
+                    if (donationProvider
+                            .getRequestsByCategory(selectedCategory!)
+                            .isEmpty &&
+                        donationProvider
+                            .getUrgentRequestsByCategory(selectedCategory!)
+                            .isEmpty &&
+                        donationProvider
+                            .getCommunityRequestsByCategory(selectedCategory!)
+                            .isEmpty)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.inbox_outlined,
+                                size: 48,
+                                color: Colors.grey[400],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No ${selectedCategory?.toLowerCase()} requests available',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Be the first to create a request!',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ],
-
-              // Show message if no requests available
-              if (getFilteredData().isEmpty)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 40),
-                    child: Text(
-                      'No ${selectedCategory?.toLowerCase()} requests available',
-                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                        ),
+                      ),
+                  ] else
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 40),
+                        child: Text(
+                          'Select a category to view requests',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-            ] else
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
-                  child: Text(
-                    'Select a category to view requests',
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                  ),
-                ),
+                ],
               ),
-          ],
-        ),
+            ),
+          );
+        },
       ),
     );
   }

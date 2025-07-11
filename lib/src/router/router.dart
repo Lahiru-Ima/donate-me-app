@@ -59,13 +59,7 @@ class RouterClass {
         path: RouterNames.donationDetails,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
-          return DonationDetailsScreen(
-            type: extra?['type'] ?? '',
-            location: extra?['location'] ?? '',
-            description: extra?['description'] ?? '',
-            isUrgent: extra?['isUrgent'] ?? false,
-            category: extra?['category'] ?? '',
-          );
+          return DonationDetailsScreen(requestData: extra ?? {});
         },
       ),
       GoRoute(

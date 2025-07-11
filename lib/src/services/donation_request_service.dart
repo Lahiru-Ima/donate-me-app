@@ -1,7 +1,7 @@
-import 'package:donate_me_app/src/models/blood_request_model.dart';
-import 'package:donate_me_app/src/models/hair_request_model.dart';
-import 'package:donate_me_app/src/models/kidney_request_model.dart';
-import 'package:donate_me_app/src/models/fund_request_model.dart';
+import 'package:donate_me_app/src/models/request_models/blood_request_model.dart';
+import 'package:donate_me_app/src/models/request_models/hair_request_model.dart';
+import 'package:donate_me_app/src/models/request_models/kidney_request_model.dart';
+import 'package:donate_me_app/src/models/request_models/fund_request_model.dart';
 import 'package:donate_me_app/src/services/database_exception.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

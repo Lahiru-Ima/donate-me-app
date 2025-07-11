@@ -49,27 +49,27 @@ class DonationDetailsScreen extends StatelessWidget {
           {
             'icon': '✂️',
             'requirement':
-                'Hair Type: ${requestData['hairType'] ?? 'Not specified'}',
+                'Hair Type: ${requestData['hair_type'] ?? 'Not specified'}',
           },
           {
             'icon': '🎨',
             'requirement':
-                'Hair Color: ${requestData['hairColor'] ?? 'Not specified'}',
+                'Hair Color: ${requestData['hair_color'] ?? 'Not specified'}',
           },
           {
             'icon': '📏',
             'requirement':
-                'Min Length: ${requestData['minLength'] ?? 'Not specified'} inches',
+                'Min Length: ${requestData['min_length'] ?? 'Not specified'} inches',
           },
           {
             'icon': '📦',
             'requirement':
-                'Collection: ${requestData['collectionMethod'] ?? 'Not specified'}',
+                'Collection: ${requestData['collection_method'] ?? 'Not specified'}',
           },
           {
             'icon': '🎯',
             'requirement':
-                'Purpose: ${requestData['purpose'] ?? 'Not specified'}',
+                'Purpose: ${requestData['purpose_category'] ?? 'Not specified'}',
           },
         ];
       case 'kidney':
@@ -77,27 +77,27 @@ class DonationDetailsScreen extends StatelessWidget {
           {
             'icon': '🫘',
             'requirement':
-                'Kidney Type: ${requestData['kidneyType'] ?? 'Not specified'}',
+                'Kidney Type: ${requestData['blood_group'] ?? 'Not specified'}',
           },
           {
             'icon': '🔬',
             'requirement':
-                'Stage: ${requestData['kidneyFailureStage'] ?? 'Not specified'}',
+                'Stage: ${requestData['kidney_failure_stage'] ?? 'Not specified'}',
           },
           {
             'icon': '💉',
             'requirement':
-                'Dialysis: ${requestData['dialysisFrequency'] ?? 'Not specified'}',
+                'Dialysis: ${requestData['dialysis_history'] ?? 'Not specified'}',
           },
           {
             'icon': '🧬',
             'requirement':
-                'Blood Group: ${requestData['bloodGroup'] ?? 'Not specified'}',
+                'Blood Group: ${requestData['blood_group'] ?? 'Not specified'}',
           },
           {
             'icon': '⚡',
             'requirement':
-                'Urgency: ${requestData['urgencyLevel'] ?? 'Not specified'}',
+                'Urgency: ${requestData['urgency_level'] ?? 'Not specified'}',
           },
         ];
       case 'fund':
@@ -105,27 +105,27 @@ class DonationDetailsScreen extends StatelessWidget {
           {
             'icon': '💰',
             'requirement':
-                'Amount Needed: \$${requestData['amountNeeded'] ?? 'Not specified'}',
+                'Amount Needed: LKR ${requestData['amount_requested'] ?? requestData['target_amount'] ?? 'Not specified'}',
           },
           {
             'icon': '📄',
             'requirement':
-                'Request Type: ${requestData['requestType'] ?? 'Not specified'}',
+                'Request Type: ${requestData['request_type'] ?? 'Not specified'}',
           },
           {
             'icon': '🏥',
             'requirement':
-                'For: ${requestData['patientName'] ?? requestData['beneficiaryName'] ?? 'Not specified'}',
+                'For: ${requestData['full_name'] ?? requestData['beneficiary'] ?? requestData['organization'] ?? 'Not specified'}',
           },
           {
             'icon': '📅',
             'requirement':
-                'Deadline: ${requestData['deadline'] ?? 'Not specified'}',
+                'Deadline: ${requestData['timeline'] ?? 'Not specified'}',
           },
           {
             'icon': '📋',
             'requirement':
-                'Purpose: ${requestData['purpose'] ?? 'Not specified'}',
+                'Purpose: ${requestData['purpose'] ?? requestData['reason'] ?? requestData['fund_category'] ?? requestData['charity_category'] ?? 'Not specified'}',
           },
         ];
       default:

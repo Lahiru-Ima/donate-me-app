@@ -1,4 +1,5 @@
-import 'package:donate_me_app/src/common_widgets/community_request_card.dart';
+import 'package:donate_me_app/src/common_widgets/donation_request_card.dart';
+import 'package:donate_me_app/src/models/request_models/donation_request_model.dart';
 import 'package:donate_me_app/src/providers/wishlist_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -57,11 +58,13 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     itemCount: getAllWishlistRequests().length,
                     itemBuilder: (context, index) {
                       final request = getAllWishlistRequests()[index];
-                      return CommunityRequestCard(
-                        type: request['type'],
-                        location: request['location'],
-                        description: request['description'],
-                        category: request['category'],
+                      final requestModel = DonationRequestModel.fromMap(
+                        request,
+                      );
+                      return DonationRequestCard(
+                        request: requestModel,
+                        cardType: CardType.community,
+                       
                         onWishlistToggle: () {
                           final wishlistProvider =
                               Provider.of<WishlistProvider>(

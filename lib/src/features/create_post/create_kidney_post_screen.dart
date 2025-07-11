@@ -1,4 +1,9 @@
+import 'package:donate_me_app/src/constants/constants.dart';
+import 'package:donate_me_app/src/models/request_models/kidney_request_model.dart';
+import 'package:donate_me_app/src/providers/auth_provider.dart';
+import 'package:donate_me_app/src/providers/donation_request_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class CreateKidneyPostScreen extends StatefulWidget {
   const CreateKidneyPostScreen({super.key});
@@ -99,19 +104,154 @@ class _CreateKidneyPostScreenState extends State<CreateKidneyPostScreen> {
     super.dispose();
   }
 
-  void _submitPost() {
+  Future<void> _submitPost() async {
     if (_formKey.currentState!.validate()) {
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Kidney donation request posted successfully! Your request will be reviewed and published.',
+      // Validate required fields
+      if (_selectedBloodGroup.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select a blood group'),
+            backgroundColor: Colors.red,
           ),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 4),
-        ),
+        );
+        return;
+      }
+
+      if (_selectedGender.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select gender'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (_urgencyLevel.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select urgency level'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final authProvider = Provider.of<AuthenticationProvider>(
+        context,
+        listen: false,
       );
-      Navigator.pop(context);
+      final requestProvider = Provider.of<DonationRequestProvider>(
+        context,
+        listen: false,
+      );
+
+      if (authProvider.userModel?.id == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User not authenticated'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      try {
+        // Create blood donation request model
+        final kidneyRequest = KidneyRequestModel(
+          userId: authProvider.userModel!.id,
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim(),
+          location: _locationController.text.trim(),
+          hospital: _hospitalController.text.trim(),
+          patientName: _patientNameController.text.trim(),
+          patientAge: int.parse(_patientAgeController.text.trim()),
+          bloodGroup: _selectedBloodGroup,
+          gender: _selectedGender,
+          urgencyLevel: _urgencyLevel,
+          medicalCondition: _medicalConditionController.text.trim(),
+          doctorName: _doctorNameController.text.trim(),
+          contactPerson: _contactPersonController.text.trim(),
+          contactPhone: _contactPhoneController.text.trim(),
+          contactEmail: _contactEmailController.text.trim(),
+          isEmergency: _isEmergency,
+          additionalNotes: _additionalNotesController.text.trim().isEmpty
+              ? null
+              : _additionalNotesController.text.trim(),
+          kidneyFailureStage: _kidneyFailureStage,
+          hospitalId: _hospitalIdController.text.trim(),
+          dialysisHistory: _dialysisHistoryController.text.trim(),
+          donationType: _donationType,
+          timeline: _timelineController.text.trim(),
+          onDialysis: _onDialysis,
+          dialysisFrequency: _dialysisFrequencyController.text.trim(),
+          compatibilityNotes: _compatibilityNotesController.text.trim(),
+          crossMatchRequired: _crossMatchRequired,
+          familyHistory: _familyHistoryController.text.trim(),
+        );
+
+        // Show loading dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(color: kKidneyColor),
+          ),
+        );
+
+        // Create the kidney request
+        final success = await requestProvider.createKidneyRequest(
+          kidneyRequest,
+        );
+
+        // Hide loading dialog
+        if (mounted) Navigator.of(context).pop();
+
+        if (success) {
+          // Show success message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Kidney donation request posted successfully! Your request will be reviewed and published.',
+                ),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 4),
+              ),
+            );
+            Navigator.pop(context);
+          }
+        } else {
+          // Show error message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  requestProvider.error ?? 'Failed to create kidney request',
+                ),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        // Hide loading dialog if still showing
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error creating request: ${e.toString()}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
     }
   }
 

@@ -1,4 +1,4 @@
-import 'package:donate_me_app/src/models/blood_request_model.dart';
+import 'package:donate_me_app/src/models/request_models/blood_request_model.dart';
 import 'package:donate_me_app/src/providers/donation_request_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:donate_me_app/src/constants/constants.dart';

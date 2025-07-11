@@ -25,6 +25,7 @@ import 'package:donate_me_app/src/router/router_names.dart';
 import 'package:donate_me_app/src/router/shell_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:donate_me_app/src/models/job_models/job_model.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -129,8 +130,8 @@ class RouterClass {
       GoRoute(
         path: RouterNames.jobApplication,
         builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>?;
-          return JobApplicationScreen(job: extra?['job']);
+          final job = state.extra as JobModel?;
+          return JobApplicationScreen(job: job);
         },
       ),
       GoRoute(

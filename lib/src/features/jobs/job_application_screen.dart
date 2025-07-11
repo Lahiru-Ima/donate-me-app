@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:provider/provider.dart';
 import '../../common_widgets/primary_button.dart';
+import '../../models/job_models/job_model.dart';
+import '../../models/job_models/job_application_model.dart';
+import '../../providers/job_provider.dart';
+import '../../providers/auth_provider.dart';
 
 class JobApplicationScreen extends StatefulWidget {
-  final Map<String, dynamic> job;
+  final JobModel? job;
 
   const JobApplicationScreen({super.key, required this.job});
 
@@ -17,7 +22,7 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
   final _formKey = GlobalKey<FormBuilderState>();
 
   // Form fields
-  String _selectedWorkType = 'Full-time';
+  String _selectedWorkType = 'Full-time (8 hours/day)';
   String _selectedLanguage = 'English';
   String _selectedAvailability = 'Immediately';
   File? _resumeFile;
@@ -26,10 +31,11 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
 
   final List<String> _workTypes = [
     'Full-time (8 hours/day)',
-    'Part-time',
-    'Flexible',
-    'Weekends only',
-    'Overnight shifts',
+    'Part-time (4 hours/day)',
+    'Overnight (10pm - 6am)',
+    'Flexible hours',
+    'Weekend only',
+    'Weekdays only',
   ];
 
   final List<String> _languages = [
@@ -51,6 +57,13 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.job == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Apply for Job')),
+        body: const Center(child: Text('Job information not available')),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -373,7 +386,7 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              widget.job['title'],
+              widget.job?.title ?? 'Job Title',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -382,12 +395,12 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              '${widget.job['type']} • ${widget.job['location']}',
+              '${widget.job?.type ?? 'Job Type'} • ${widget.job?.location ?? 'Location'}',
               style: TextStyle(fontSize: 14, color: Colors.blue[600]),
             ),
             const SizedBox(height: 8),
             Text(
-              widget.job['salary'],
+              widget.job?.salary ?? 'Salary not specified',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[700],
@@ -617,46 +630,115 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
       return;
     }
 
+    if (widget.job?.id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Job information is not available'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
+    final authProvider = Provider.of<AuthenticationProvider>(
+      context,
+      listen: false,
+    );
+    final jobProvider = Provider.of<JobProvider>(context, listen: false);
+
+    if (authProvider.userModel?.id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('User not authenticated'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
     try {
-      // final formData = _formKey.currentState!.value;
+      final formData = _formKey.currentState!.fields;
 
-      // TODO: Submit application to Supabase database
-      // final applicationData = {
-      //   'job_id': widget.job['id'],
-      //   'full_name': formData['full_name'],
-      //   'phone': formData['phone'],
-      //   'email': formData['email'],
-      //   'address': formData['address'],
-      //   'experience': formData['experience'],
-      //   'previous_experience': formData['previous_experience'],
-      //   'skills': formData['skills'],
-      //   'preferred_work_type': _selectedWorkType,
-      //   'language_proficiency': _selectedLanguage,
-      //   'availability': _selectedAvailability,
-      //   'expected_salary': formData['expected_salary'],
-      //   'why_hire': formData['why_hire'],
-      //   'resume_file': _resumeFile,
-      //   'certificate_file': _certificateFile,
-      // };
+      // Get form values with null safety
+      final fullName = formData['full_name']?.value?.toString() ?? '';
+      final phone = formData['phone']?.value?.toString() ?? '';
+      final email = formData['email']?.value?.toString() ?? '';
+      final address = formData['address']?.value?.toString() ?? '';
+      final experience = formData['experience']?.value?.toString() ?? '';
+      final previousExperience =
+          formData['previous_experience']?.value?.toString() ?? '';
+      final skillsString = formData['skills']?.value?.toString() ?? '';
+      final expectedSalary =
+          formData['expected_salary']?.value?.toString() ?? '';
+      final whyHire = formData['why_hire']?.value?.toString() ?? '';
 
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
+      // Convert skills string to list
+      List<String> skillsList = skillsString.isNotEmpty
+          ? skillsString
+                .split(',')
+                .map((skill) => skill.trim())
+                .where((skill) => skill.isNotEmpty)
+                .toList()
+          : [];
 
-      // Show success message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Application submitted successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+      // Convert references to list (for now, use a placeholder)
+      List<String> referencesList = ['Available upon request'];
 
-        // Navigate back
-        Navigator.pop(context);
+      final applicationData = JobApplicationModel(
+        jobId: widget.job!.id!,
+        applicantUserId: authProvider.userModel!.id,
+        fullName: fullName,
+        email: email,
+        phone: phone,
+        address: address,
+        age: 25, // TODO: Get actual age from form or user profile
+        gender: 'Not specified', // TODO: Add gender field to form
+        experience: '$experience years of experience. $previousExperience',
+        skills: skillsList,
+        availability: _selectedAvailability,
+        motivation: whyHire,
+        referencesList: referencesList,
+        emergencyContact: 'To be provided',
+        emergencyPhone: 'To be provided',
+        hasTransportation: true, // TODO: Add this field to form
+        additionalNotes:
+            'Preferred work type: $_selectedWorkType. Language proficiency: $_selectedLanguage. Expected salary: $expectedSalary',
+      );
+
+      final success = await jobProvider.submitJobApplication(applicationData);
+
+      if (success) {
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Application submitted successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Navigate back
+          Navigator.pop(context);
+        }
+      } else {
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Error submitting application: ${jobProvider.error ?? 'Unknown error'}',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

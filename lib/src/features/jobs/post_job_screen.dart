@@ -1,5 +1,9 @@
+import 'package:donate_me_app/src/models/job_models/job_model.dart';
+import 'package:donate_me_app/src/providers/auth_provider.dart';
+import 'package:donate_me_app/src/providers/job_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:provider/provider.dart';
 import '../../common_widgets/primary_button.dart';
 
 class PostJobScreen extends StatefulWidget {
@@ -444,38 +448,87 @@ class _PostJobScreenState extends State<PostJobScreen> {
     setState(() {
       _isLoading = true;
     });
+    final authProvider = Provider.of<AuthenticationProvider>(
+      context,
+      listen: false,
+    );
+    final jobProvider = Provider.of<JobProvider>(context, listen: false);
+
+    if (authProvider.userModel?.id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('User not authenticated'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
 
     try {
-      // final formData = _formKey.currentState!.value;
+      // Get form values with null safety
+      final formData = _formKey.currentState!.fields;
+      final jobTitle = formData['job_title']?.value?.toString() ?? '';
+      final salary = formData['salary']?.value?.toString() ?? '';
+      final skillsString = formData['skills']?.value?.toString() ?? '';
+      final description = formData['description']?.value?.toString() ?? '';
 
-      // TODO: Submit job to Supabase database
-      // final jobData = {
-      //   'title': formData['job_title'],
-      //   'type': _selectedJobType,
-      //   'location': _selectedLocation,
-      //   'work_hours': _selectedWorkHours,
-      //   'salary': formData['salary'],
-      //   'skills': formData['skills'],
-      //   'preferred_gender': _selectedGender,
-      //   'preferred_age': _selectedAgeRange,
-      //   'description': formData['description'],
-      //   'urgent_hiring': _isUrgentHiring,
-      // };
+      // Convert skills string to list
+      List<String> skillsList = skillsString.isNotEmpty
+          ? skillsString
+                .split(',')
+                .map((skill) => skill.trim())
+                .where((skill) => skill.isNotEmpty)
+                .toList()
+          : [];
 
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
+      final jobData = JobModel(
+        userId: authProvider.userModel!.id,
+        title: jobTitle,
+        type: _selectedJobType,
+        location: _selectedLocation,
+        workHours: _selectedWorkHours,
+        salary: salary,
+        requiredSkills: skillsList,
+        preferredGender: _selectedGender,
+        preferredAge: _selectedAgeRange,
+        description: description,
+        postedBy: authProvider.userModel?.name ?? 'Anonymous',
+        urgentHiring: _isUrgentHiring,
+        contactPerson: authProvider.userModel?.name ?? 'Not specified',
+        contactPhone: authProvider.userModel?.phoneNumber ?? 'Not specified',
+        contactEmail: authProvider.userModel?.email ?? 'Not specified',
+      );
 
-      // Show success message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Job posted successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+      final success = await jobProvider.createJob(jobData);
 
-        // Navigate back
-        Navigator.pop(context);
+      if (success) {
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Job posted successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Navigate back
+          Navigator.pop(context);
+        }
+      } else {
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Error posting job: ${jobProvider.error ?? 'Unknown error'}',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

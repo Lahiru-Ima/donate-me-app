@@ -1,6 +1,12 @@
+import 'package:donate_me_app/src/constants/constants.dart';
+import 'package:donate_me_app/src/models/request_models/fund_request_model.dart';
+import 'package:donate_me_app/src/providers/auth_provider.dart';
+import 'package:donate_me_app/src/providers/donation_request_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+
+import 'package:provider/provider.dart';
 
 class CreateFundPostScreen extends StatefulWidget {
   const CreateFundPostScreen({super.key});
@@ -40,6 +46,7 @@ class _CreateFundPostScreenState extends State<CreateFundPostScreen>
   final _organizationContactController = TextEditingController();
   final _organizationEmailController = TextEditingController();
   final _organizationAddressController = TextEditingController();
+  final _additionalNotesController = TextEditingController();
 
   List<File> _uploadedFiles = [];
   List<String> _supportingDocuments = [];
@@ -115,6 +122,7 @@ class _CreateFundPostScreenState extends State<CreateFundPostScreen>
     _organizationContactController.dispose();
     _organizationEmailController.dispose();
     _organizationAddressController.dispose();
+    _additionalNotesController.dispose();
     super.dispose();
   }
 
@@ -146,8 +154,18 @@ class _CreateFundPostScreenState extends State<CreateFundPostScreen>
     });
   }
 
-  void _submitMedicalRequest() {
+  Future<void> _submitMedicalRequest() async {
     if (_requestFormKey.currentState!.validate() && _declarationAccepted) {
+      if (_urgencyLevel.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select urgency level'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       if (_supportingDocuments.isEmpty && _uploadedFiles.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -160,16 +178,110 @@ class _CreateFundPostScreenState extends State<CreateFundPostScreen>
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Medical fund request posted successfully! Your request will be reviewed and published.',
-          ),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 4),
-        ),
+      final authProvider = Provider.of<AuthenticationProvider>(
+        context,
+        listen: false,
       );
-      Navigator.pop(context);
+      final requestProvider = Provider.of<DonationRequestProvider>(
+        context,
+        listen: false,
+      );
+
+      if (authProvider.userModel?.id == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User not authenticated'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      try {
+        // Create fund request model
+        final fundRequest = FundRequestModel(
+          userId: authProvider.userModel!.id,
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim(),
+          requestType: 'medical',
+          fullName: _fullNameController.text.trim(),
+          nic: _nicController.text.trim(),
+          phone: _phoneController.text.trim(),
+          email: _emailController.text.trim(),
+          address: _addressController.text.trim(),
+          amountRequested: double.tryParse(
+            _amountRequestedController.text.trim(),
+          ),
+          reason: _reasonController.text.trim(),
+          hospital: _hospitalController.text.trim(),
+          doctor: _doctorController.text.trim(),
+          treatment: _treatmentController.text.trim(),
+          timeline: _timelineController.text.trim(),
+          fundCategory: _fundCategory,
+          supportingDocuments: _supportingDocuments,
+          urgencyLevel: _urgencyLevel,
+          declarationAccepted: _declarationAccepted,
+        );
+
+        // Show loading dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) =>
+              const Center(child: CircularProgressIndicator(color: kFundColor)),
+        );
+
+        // Create the fund request
+        final success = await requestProvider.createFundRequest(fundRequest);
+
+        // Hide loading dialog
+        if (mounted) Navigator.of(context).pop();
+
+        if (success) {
+          // Show success message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Fund request posted successfully! Your request will be reviewed and published.',
+                ),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 4),
+              ),
+            );
+            Navigator.pop(context);
+          }
+        } else {
+          // Show error message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  requestProvider.error ?? 'Failed to create fund request',
+                ),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        // Hide loading dialog if still showing
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error creating request: ${e.toString()}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
     } else if (!_declarationAccepted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -180,18 +292,109 @@ class _CreateFundPostScreenState extends State<CreateFundPostScreen>
     }
   }
 
-  void _submitCharityRequest() {
+  Future<void> _submitCharityRequest() async {
     if (_charityFormKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Charity fundraising request posted successfully! Your request will be reviewed and published.',
-          ),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 4),
-        ),
+      final authProvider = Provider.of<AuthenticationProvider>(
+        context,
+        listen: false,
       );
-      Navigator.pop(context);
+      final requestProvider = Provider.of<DonationRequestProvider>(
+        context,
+        listen: false,
+      );
+
+      if (authProvider.userModel?.id == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User not authenticated'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      try {
+        // Create charity fund request model
+        final charityRequest = FundRequestModel(
+          userId: authProvider.userModel!.id,
+          title: _charityTitleController.text.trim(),
+          description: _charityDescriptionController.text.trim(),
+          requestType: 'charity',
+          organization: _organizationController.text.trim(),
+          beneficiary: _beneficiaryController.text.trim(),
+          targetAmount: double.tryParse(_targetAmountController.text.trim()),
+          purpose: _purposeController.text.trim(),
+          organizationContact: _organizationContactController.text.trim(),
+          organizationEmail: _organizationEmailController.text.trim(),
+          organizationAddress: _organizationAddressController.text.trim(),
+          charityCategory: _charityCategory,
+          isRegisteredCharity: _isRegisteredCharity,
+          additionalNotes: _additionalNotesController.text.trim().isNotEmpty
+              ? _additionalNotesController.text.trim()
+              : null,
+          urgencyLevel: 'Medium', // Default for charity requests
+          declarationAccepted: true, // Assumed for charity requests
+        );
+
+        // Show loading dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) =>
+              const Center(child: CircularProgressIndicator(color: kFundColor)),
+        );
+
+        // Create the charity fund request
+        final success = await requestProvider.createFundRequest(charityRequest);
+
+        // Hide loading dialog
+        if (mounted) Navigator.of(context).pop();
+
+        if (success) {
+          // Show success message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Charity fundraising request posted successfully! Your request will be reviewed and published.',
+                ),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 4),
+              ),
+            );
+            Navigator.pop(context);
+          }
+        } else {
+          // Show error message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  requestProvider.error ?? 'Failed to create charity request',
+                ),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        // Hide loading dialog if still showing
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error creating charity request: ${e.toString()}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -677,6 +880,14 @@ class _CreateFundPostScreenState extends State<CreateFundPostScreen>
               hintText: 'Who will benefit from this fundraising?',
             ),
 
+            // Additional Notes
+            _buildTextField(
+              'Additional Notes (Optional)',
+              _additionalNotesController,
+              maxLines: 3,
+              hintText: 'Any additional information that might be helpful',
+            ),
+
             const SizedBox(height: 30),
 
             // Submit Button
@@ -775,9 +986,52 @@ class _CreateFundPostScreenState extends State<CreateFundPostScreen>
             ),
             style: TextStyle(fontSize: isSmallScreen ? 12 : 14),
             validator: isRequired
-                ? (value) =>
-                      value?.isEmpty ?? true ? 'This field is required' : null
-                : null,
+                ? (value) {
+                    if (value?.isEmpty ?? true) {
+                      return 'This field is required';
+                    }
+                    // Additional validation for numeric fields
+                    if (keyboardType == TextInputType.number) {
+                      final numValue = double.tryParse(value!);
+                      if (numValue == null) {
+                        return 'Please enter a valid number';
+                      }
+                      if (label.contains('Amount') && numValue <= 0) {
+                        return 'Amount must be greater than 0';
+                      }
+                    }
+                    // Email validation
+                    if (keyboardType == TextInputType.emailAddress) {
+                      if (!RegExp(
+                        r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                      ).hasMatch(value!)) {
+                        return 'Please enter a valid email address';
+                      }
+                    }
+                    return null;
+                  }
+                : (value) {
+                    // Validation for optional fields
+                    if (value != null && value.isNotEmpty) {
+                      if (keyboardType == TextInputType.number) {
+                        final numValue = double.tryParse(value);
+                        if (numValue == null) {
+                          return 'Please enter a valid number';
+                        }
+                        if (label.contains('Amount') && numValue <= 0) {
+                          return 'Amount must be greater than 0';
+                        }
+                      }
+                      if (keyboardType == TextInputType.emailAddress) {
+                        if (!RegExp(
+                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                        ).hasMatch(value)) {
+                          return 'Please enter a valid email address';
+                        }
+                      }
+                    }
+                    return null;
+                  },
           ),
         ],
       ),

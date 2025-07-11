@@ -1,4 +1,9 @@
+import 'package:donate_me_app/src/constants/constants.dart';
+import 'package:donate_me_app/src/models/request_models/hair_request_model.dart';
+import 'package:donate_me_app/src/providers/auth_provider.dart';
+import 'package:donate_me_app/src/providers/donation_request_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class CreateHairPostScreen extends StatefulWidget {
   const CreateHairPostScreen({super.key});
@@ -100,19 +105,135 @@ class _CreateHairPostScreenState extends State<CreateHairPostScreen> {
     super.dispose();
   }
 
-  void _submitPost() {
+  Future<void> _submitPost() async {
     if (_formKey.currentState!.validate()) {
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Hair donation request posted successfully! Your request will be reviewed and published.',
+      if (_urgencyLevel.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select urgency level'),
+            backgroundColor: Colors.red,
           ),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 4),
-        ),
+        );
+        return;
+      }
+
+      // Validate length fields if both are provided
+      final minLength = double.tryParse(_minLengthController.text.trim());
+      final maxLength = double.tryParse(_maxLengthController.text.trim());
+
+      if (minLength != null && maxLength != null && minLength > maxLength) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Maximum length must be greater than or equal to minimum length',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final authProvider = Provider.of<AuthenticationProvider>(
+        context,
+        listen: false,
       );
-      Navigator.pop(context);
+      final requestProvider = Provider.of<DonationRequestProvider>(
+        context,
+        listen: false,
+      );
+      if (authProvider.userModel?.id == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User not authenticated'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      try {
+        final hairRequest = HairRequestModel(
+          userId: authProvider.userModel!.id,
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim(),
+          location: _locationController.text.trim(),
+          organization: _organizationController.text.trim(),
+          hairType: _hairType,
+          minLength: double.tryParse(_minLengthController.text.trim()) ?? 0.0,
+          maxLength: double.tryParse(_maxLengthController.text.trim()) ?? 0.0,
+          hairColor: _hairColor,
+          purposeCategory: _purposeCategory,
+          recipientAge: int.tryParse(_recipientAgeController.text.trim()) ?? 0,
+          recipientGender: _recipientGender,
+          medicalCondition: _medicalConditionController.text.trim(),
+          collectionMethod: _collectionMethod,
+          collectionLocation: _collectionLocationController.text.trim(),
+          availableDates: _availableDatesController.text.trim(),
+          contactPerson: _contactPersonController.text.trim(),
+          contactPhone: _contactPhoneController.text.trim(),
+          contactEmail: _contactEmailController.text.trim(),
+          quantityNeeded:
+              int.tryParse(_quantityNeededController.text.trim()) ?? 0,
+          urgencyLevel: _urgencyLevel,
+          certificateOffered: _certificateOffered,
+        );
+
+        // Show loading dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) =>
+              const Center(child: CircularProgressIndicator(color: kHairColor)),
+        );
+
+        final success = await requestProvider.createHairRequest(hairRequest);
+
+        // Hide loading dialog
+        if (mounted) Navigator.of(context).pop();
+
+        if (success) {
+          // Show success message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Hair request created successfully!'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 4),
+              ),
+            );
+            Navigator.pop(context);
+          }
+        } else {
+          // Show error message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  requestProvider.error ?? 'Failed to create hair request',
+                ),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        // Hide loading dialog if still showing
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error creating request: ${e.toString()}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -457,9 +578,51 @@ class _CreateHairPostScreenState extends State<CreateHairPostScreen> {
             ),
             style: TextStyle(fontSize: isSmallScreen ? 12 : 14),
             validator: isRequired
-                ? (value) =>
-                      value?.isEmpty ?? true ? 'This field is required' : null
-                : null,
+                ? (value) {
+                    if (value?.isEmpty ?? true) {
+                      return 'This field is required';
+                    }
+                    // Additional validation for numeric fields
+                    if (keyboardType == TextInputType.number) {
+                      final numValue = double.tryParse(value!);
+                      if (numValue == null) {
+                        return 'Please enter a valid number';
+                      }
+                      if (label.contains('Min Length') && numValue < 1) {
+                        return 'Minimum length must be at least 1 inch';
+                      }
+                      if (label.contains('Max Length') && numValue < 1) {
+                        return 'Maximum length must be at least 1 inch';
+                      }
+                      if (label.contains('Age') &&
+                          (numValue < 0 || numValue > 120)) {
+                        return 'Please enter a valid age';
+                      }
+                      if (label.contains('Quantity') && numValue < 1) {
+                        return 'Quantity must be at least 1';
+                      }
+                    }
+                    return null;
+                  }
+                : (value) {
+                    // Validation for optional numeric fields
+                    if (keyboardType == TextInputType.number &&
+                        value != null &&
+                        value.isNotEmpty) {
+                      final numValue = double.tryParse(value);
+                      if (numValue == null) {
+                        return 'Please enter a valid number';
+                      }
+                      if (label.contains('Max Length') && numValue < 1) {
+                        return 'Maximum length must be at least 1 inch';
+                      }
+                      if (label.contains('Age') &&
+                          (numValue < 0 || numValue > 120)) {
+                        return 'Please enter a valid age';
+                      }
+                    }
+                    return null;
+                  },
           ),
         ],
       ),

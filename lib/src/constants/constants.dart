@@ -15,7 +15,7 @@ final kShadowColor = const Color.fromARGB(
 // Category Colors
 const kBloodColor = Color(0xFFEF474F); // Red
 const kHairColor = Color.fromARGB(255, 105, 82, 82); // Brown
-const kKidneyColor = Color(0xFFE91E63); // Pink
-const kFundColor = Color(0xFF4CAF50); // Green
+const kKidneyColor = Color(0xFF4CAF50); // Green
+const kFundColor = Color.fromARGB(255, 238, 241, 35); // Yellow
 
 const kDefaultPadding = EdgeInsets.symmetric(horizontal: 20);

@@ -98,14 +98,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             color: Colors.black87,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'ROLE',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
                       ],
                     ),
                   ),

@@ -1,12 +1,18 @@
+import 'package:donate_me_app/src/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:donate_me_app/src/models/donation_models/donation_registration_model.dart';
+import 'package:donate_me_app/src/providers/donation_registration_provider.dart';
 
 class KidneyDonationFormScreen extends StatefulWidget {
+  final String donationRequestId;
   final String type;
   final String location;
   final String description;
 
   const KidneyDonationFormScreen({
     super.key,
+    required this.donationRequestId,
     required this.type,
     required this.location,
     required this.description,
@@ -110,32 +116,93 @@ class _KidneyDonationFormScreenState extends State<KidneyDonationFormScreen> {
     super.dispose();
   }
 
-  Future<void> _selectDate(TextEditingController controller) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) {
-      controller.text = "${picked.day}/${picked.month}/${picked.year}";
-    }
-  }
-
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (_formKey.currentState!.validate() &&
         _consentGiven &&
         _psychologicalEvaluationConsent) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Kidney donation registration submitted successfully! You will be contacted for further evaluation.',
-          ),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 4),
-        ),
-      );
-      Navigator.pop(context);
+      try {
+
+        // Prepare kidney-specific data
+        Map<String, dynamic> kidneySpecificData = {
+          'emergencyContact': _emergencyContactController.text,
+          'emergencyPhone': _emergencyPhoneController.text,
+          'selectedBloodGroup': _selectedBloodGroup,
+          'recipientRelation': _recipientRelationController.text,
+          'height': _heightController.text,
+          'weight': _weightController.text,
+          'hasChronicDiseases': _hasChronicDiseases,
+          'chronicDiseases': _chronicDiseasesController.text,
+          'hasPreviousSurgeries': _hasPreviousSurgeries,
+          'surgeries': _surgeriesController.text,
+          'hasCurrentMedication': _hasCurrentMedication,
+          'medicationDetails': _medicationDetailsController.text,
+          'hasAllergies': _hasAllergies,
+          'allergies': _allergiesController.text,
+          'smoker': _smoker,
+          'alcoholConsumer': _alcoholConsumer,
+        };final authProvider = Provider.of<AuthenticationProvider>(
+          context,
+          listen: false,
+        );
+
+        if (authProvider.userModel?.id == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('User not authenticated'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+        // Create donation registration model
+        final registration = DonationRegistrationModel(
+          donationRequestId: widget.donationRequestId,
+          donorUserId: authProvider.userModel!.id,
+          category: 'kidney',
+          status: 'pending',
+          createdAt: DateTime.now(),
+          fullName: _fullNameController.text,
+          nic: _nicController.text,
+          email: _emailController.text,
+          phone: _phoneController.text,
+          address: _addressController.text,
+          gender: _selectedGender,
+          age: int.tryParse(_ageController.text) ?? 0,
+          categorySpecificData: kidneySpecificData,
+        );
+
+        // Save to database
+        final provider = Provider.of<DonationRegistrationProvider>(
+          context,
+          listen: false,
+        );
+        final success = await provider.createDonationRegistration(registration);
+
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Kidney donation registration submitted successfully! You will be contacted for further evaluation.',
+              ),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 4),
+            ),
+          );
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(provider.error ?? 'Failed to submit registration'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
     } else if (!_consentGiven || !_psychologicalEvaluationConsent) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -233,11 +300,7 @@ class _KidneyDonationFormScreenState extends State<KidneyDonationFormScreen> {
                 isRequired: true,
               ),
               _buildTextField('NIC Number', _nicController, isRequired: true),
-              _buildDateField(
-                'Date of Birth',
-                _dobController,
-                isRequired: true,
-              ),
+              
               _buildTextField(
                 'Age',
                 _ageController,
@@ -532,40 +595,6 @@ class _KidneyDonationFormScreenState extends State<KidneyDonationFormScreen> {
             borderSide: BorderSide(color: Colors.green),
           ),
         ),
-        validator: isRequired
-            ? (value) {
-                if (value == null || value.isEmpty) {
-                  return 'This field is required';
-                }
-                return null;
-              }
-            : null,
-      ),
-    );
-  }
-
-  Widget _buildDateField(
-    String label,
-    TextEditingController controller, {
-    bool isRequired = false,
-  }) {
-    final isSmallScreen = MediaQuery.of(context).size.width < 360;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: TextFormField(
-        controller: controller,
-        readOnly: true,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(fontSize: isSmallScreen ? 12 : 14),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: Colors.green),
-          ),
-          suffixIcon: const Icon(Icons.calendar_today),
-        ),
-        onTap: () => _selectDate(controller),
         validator: isRequired
             ? (value) {
                 if (value == null || value.isEmpty) {

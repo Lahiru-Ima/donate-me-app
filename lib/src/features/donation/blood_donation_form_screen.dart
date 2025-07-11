@@ -1,13 +1,19 @@
+import 'package:donate_me_app/src/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:donate_me_app/src/constants/constants.dart';
+import 'package:donate_me_app/src/models/donation_models/donation_registration_model.dart';
+import 'package:donate_me_app/src/providers/donation_registration_provider.dart';
 
 class BloodDonationFormScreen extends StatefulWidget {
+  final String donationRequestId;
   final String type;
   final String location;
   final String description;
 
   const BloodDonationFormScreen({
     super.key,
+    required this.donationRequestId,
     required this.type,
     required this.location,
     required this.description,
@@ -88,16 +94,94 @@ class _BloodDonationFormScreenState extends State<BloodDonationFormScreen> {
     }
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (_formKey.currentState!.validate() && _consentGiven) {
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Blood donation registration submitted successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      Navigator.pop(context);
+      try {
+
+        final authProvider = Provider.of<AuthenticationProvider>(
+          context,
+          listen: false,
+        );
+
+        if (authProvider.userModel?.id == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('User not authenticated'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+        // Prepare blood-specific data
+        Map<String, dynamic> bloodSpecificData = {
+          'bloodGroup': _selectedBloodGroup,
+          'hasDonatedBefore': _hasdonatedBefore,
+          'lastDonationDate': _lastDonationController.text,
+          'bloodPressure': _bloodPressureController.text,
+          'hemoglobin': _hemoglobinController.text,
+          'hasCurrentMedication': _hasCurrentMedication,
+          'medicationDetails': _medicationDetailsController.text,
+        };
+
+        // Create donation registration model
+        final registration = DonationRegistrationModel(
+          donationRequestId: widget.donationRequestId,
+          donorUserId: authProvider.userModel!.id,
+          category: 'blood',
+          status: 'pending',
+          createdAt: DateTime.now(),
+          fullName: _fullNameController.text,
+          nic: _nicController.text,
+          email: _emailController.text,
+          phone: _phoneController.text,
+          address: _addressController.text,
+          gender: _selectedGender,
+          age: int.tryParse(_ageController.text) ?? 0,
+          categorySpecificData: bloodSpecificData,
+        );
+
+        // Save to database
+        final provider = Provider.of<DonationRegistrationProvider>(
+          context,
+          listen: false,
+        );
+        final success = await provider.createDonationRegistration(registration);
+
+        if (success) {
+          // Show success message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Blood donation registration submitted successfully!',
+                ),
+                backgroundColor: Colors.green,
+              ),
+            );
+            Navigator.pop(context);
+          }
+        } else {
+          // Show error message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  provider.error ?? 'Failed to submit registration',
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
     } else if (!_consentGiven) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -195,11 +279,6 @@ class _BloodDonationFormScreenState extends State<BloodDonationFormScreen> {
                 isRequired: true,
               ),
               _buildTextField('NIC Number', _nicController, isRequired: true),
-              _buildDateField(
-                'Date of Birth',
-                _dobController,
-                isRequired: true,
-              ),
               _buildTextField(
                 'Age',
                 _ageController,

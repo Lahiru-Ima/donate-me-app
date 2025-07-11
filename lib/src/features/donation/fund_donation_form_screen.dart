@@ -1,14 +1,18 @@
+import 'package:donate_me_app/src/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'package:provider/provider.dart';
+import 'package:donate_me_app/src/models/donation_models/donation_registration_model.dart';
+import 'package:donate_me_app/src/providers/donation_registration_provider.dart';
 
 class FundDonationFormScreen extends StatefulWidget {
+  final String donationRequestId;
   final String type;
   final String location;
   final String description;
 
   const FundDonationFormScreen({
     super.key,
+    required this.donationRequestId,
     required this.type,
     required this.location,
     required this.description,
@@ -18,10 +22,7 @@ class FundDonationFormScreen extends StatefulWidget {
   State<FundDonationFormScreen> createState() => _FundDonationFormScreenState();
 }
 
-class _FundDonationFormScreenState extends State<FundDonationFormScreen>
-    with TickerProviderStateMixin {
-  late TabController _tabController;
-  final _requestFormKey = GlobalKey<FormState>();
+class _FundDonationFormScreenState extends State<FundDonationFormScreen> {
   final _donateFormKey = GlobalKey<FormState>();
 
   // Medical Assistance Request Form Fields
@@ -32,10 +33,6 @@ class _FundDonationFormScreenState extends State<FundDonationFormScreen>
   final _addressController = TextEditingController();
   final _amountRequestedController = TextEditingController();
   final _reasonController = TextEditingController();
-
-  List<File> _uploadedFiles = [];
-  List<String> _supportingDocuments = [];
-  bool _declarationAccepted = false;
 
   // Donation Form Fields
   final _donorNameController = TextEditingController();
@@ -50,14 +47,6 @@ class _FundDonationFormScreenState extends State<FundDonationFormScreen>
   final _expiryDateController = TextEditingController();
   final _cvvController = TextEditingController();
   final _cardHolderNameController = TextEditingController();
-
-  final List<String> _documentTypes = [
-    'Medical Certificate',
-    'Hospital Reports',
-    'Prescription/Invoice',
-    'Doctor\'s Letter',
-    'Other relevant documents',
-  ];
 
   final List<String> _paymentMethods = [
     'Bank Transfer',
@@ -86,14 +75,7 @@ class _FundDonationFormScreenState extends State<FundDonationFormScreen>
   };
 
   @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
   void dispose() {
-    _tabController.dispose();
     _fullNameController.dispose();
     _nicController.dispose();
     _phoneController.dispose();
@@ -110,68 +92,6 @@ class _FundDonationFormScreenState extends State<FundDonationFormScreen>
     _cvvController.dispose();
     _cardHolderNameController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickFiles() async {
-    try {
-      final ImagePicker picker = ImagePicker();
-      final List<XFile> images = await picker.pickMultiImage();
-
-      if (images.isNotEmpty) {
-        setState(() {
-          _uploadedFiles.addAll(
-            images.map((image) => File(image.path)).toList(),
-          );
-        });
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error picking files: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  void _removeFile(int index) {
-    setState(() {
-      _uploadedFiles.removeAt(index);
-    });
-  }
-
-  void _submitRequestForm() {
-    if (_requestFormKey.currentState!.validate() && _declarationAccepted) {
-      if (_supportingDocuments.isEmpty && _uploadedFiles.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Please select at least one supporting document type or upload an image',
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Medical financial assistance request submitted successfully! You will receive a confirmation message from admin.',
-          ),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 4),
-        ),
-      );
-      Navigator.pop(context);
-    } else if (!_declarationAccepted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please accept the declaration to proceed'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
   }
 
   void _processDonation() {
@@ -209,7 +129,66 @@ class _FundDonationFormScreenState extends State<FundDonationFormScreen>
     });
   }
 
-  void _showPaymentSuccess() {
+  Future<void> _saveFundDonationToDatabase() async {
+    try {
+      // Prepare fund-specific data
+      Map<String, dynamic> fundSpecificData = {
+        'donorName': _donorNameController.text,
+        'donorEmail': _donorEmailController.text,
+        'donorPhone': _donorPhoneController.text,
+        'donationAmount': _donationAmountController.text,
+        'selectedPaymentMethod': _selectedPaymentMethod,
+        'amountRequested': _amountRequestedController.text,
+        'reason': _reasonController.text,
+        'paymentComplete': true,
+        'transactionId': 'TXN${DateTime.now().millisecondsSinceEpoch}',
+      };
+
+       final authProvider = Provider.of<AuthenticationProvider>(
+          context,
+          listen: false,
+        );
+
+        if (authProvider.userModel?.id == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('User not authenticated'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+      // Create donation registration model
+      final registration = DonationRegistrationModel(
+        donationRequestId: widget.donationRequestId,
+        donorUserId: authProvider.userModel!.id,
+        category: 'fund',
+        status: 'pending',
+        createdAt: DateTime.now(),
+        fullName: _donorNameController.text,
+        nic: _nicController.text,
+        email: _donorEmailController.text,
+        phone: _donorPhoneController.text,
+        address: _addressController.text,
+        categorySpecificData: fundSpecificData,
+      );
+
+      // Save to database
+      final provider = Provider.of<DonationRegistrationProvider>(
+        context,
+        listen: false,
+      );
+      await provider.createDonationRegistration(registration);
+    } catch (e) {
+      print('Error saving fund donation: $e');
+    }
+  }
+
+  void _showPaymentSuccess() async {
+    // Save to database first
+    await _saveFundDonationToDatabase();
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -239,7 +218,10 @@ class _FundDonationFormScreenState extends State<FundDonationFormScreen>
     );
   }
 
-  void _showBankTransferConfirmation() {
+  void _showBankTransferConfirmation() async {
+    // Save to database for bank transfer as well
+    await _saveFundDonationToDatabase();
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
@@ -271,566 +253,288 @@ class _FundDonationFormScreenState extends State<FundDonationFormScreen>
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.orange,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: Colors.orange,
-          tabs: const [
-            Tab(text: 'Request Assistance'),
-            Tab(text: 'Make Donation'),
-          ],
-        ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildRequestForm(isSmallScreen),
-          _buildDonationForm(isSmallScreen),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRequestForm(bool isSmallScreen) {
-    return Form(
-      key: _requestFormKey,
-      child: SingleChildScrollView(
-        padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Request Info
-            Container(
-              padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: const Border(
-                  left: BorderSide(color: Colors.orange, width: 6),
+      body: Form(
+        key: _donateFormKey,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Donation Info
+              Container(
+                padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: const Border(
+                    left: BorderSide(color: Colors.orange, width: 6),
+                  ),
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Medical Financial Assistance Request',
-                    style: TextStyle(
-                      fontSize: isSmallScreen ? 14 : 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.orange,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Fill out this form to request financial assistance for medical expenses.',
-                    style: TextStyle(
-                      fontSize: isSmallScreen ? 12 : 14,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Personal Information
-            _buildSectionTitle('Personal Information'),
-            _buildTextField('Full Name', _fullNameController, isRequired: true),
-            _buildTextField(
-              'National Identity Card (NIC) Number',
-              _nicController,
-              isRequired: true,
-            ),
-            _buildTextField(
-              'Contact Number',
-              _phoneController,
-              keyboardType: TextInputType.phone,
-              isRequired: true,
-            ),
-            _buildTextField(
-              'Email Address (if available)',
-              _emailController,
-              keyboardType: TextInputType.emailAddress,
-            ),
-            _buildTextField(
-              'Residential Address',
-              _addressController,
-              maxLines: 3,
-              isRequired: true,
-            ),
-
-            const SizedBox(height: 20),
-
-            // Financial Request Details
-            _buildSectionTitle('Financial Request Details'),
-            _buildTextField(
-              'Amount Requested (LKR)',
-              _amountRequestedController,
-              keyboardType: TextInputType.number,
-              isRequired: true,
-              prefix: 'LKR ',
-            ),
-            _buildTextField(
-              'Reason for Request',
-              _reasonController,
-              maxLines: 4,
-              isRequired: true,
-              helpText:
-                  'Please describe briefly why you are requesting financial support.',
-            ),
-
-            const SizedBox(height: 20),
-
-            // Supporting Documents
-            _buildSectionTitle('Supporting Documents'),
-            Text(
-              'Select the types of documents you have (check all that apply):',
-              style: TextStyle(
-                fontSize: isSmallScreen ? 12 : 14,
-                color: Colors.grey[700],
-              ),
-            ),
-            const SizedBox(height: 8),
-            ..._documentTypes.map((doc) {
-              return CheckboxListTile(
-                title: Text(
-                  doc,
-                  style: TextStyle(fontSize: isSmallScreen ? 12 : 14),
-                ),
-                value: _supportingDocuments.contains(doc),
-                onChanged: (value) {
-                  setState(() {
-                    if (value == true) {
-                      _supportingDocuments.add(doc);
-                    } else {
-                      _supportingDocuments.remove(doc);
-                    }
-                  });
-                },
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-              );
-            }).toList(),
-
-            const SizedBox(height: 16),
-
-            // File Upload Section
-            Text(
-              'Upload Scanned Copies / Photos:',
-              style: TextStyle(
-                fontSize: isSmallScreen ? 12 : 14,
-                color: Colors.grey[700],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[300]!),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                children: [
-                  Icon(Icons.cloud_upload, size: 48, color: Colors.grey[400]),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Tap to upload images\n(JPG, PNG)',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: isSmallScreen ? 12 : 14,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: _pickFiles,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                    ),
-                    child: const Text(
-                      'Choose Images',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Display uploaded files
-            if (_uploadedFiles.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(
-                'Uploaded Images:',
-                style: TextStyle(
-                  fontSize: isSmallScreen ? 12 : 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 8),
-              ...List.generate(_uploadedFiles.length, (index) {
-                final file = _uploadedFiles[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey[300]!),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.attach_file, color: Colors.grey[600]),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          file.path.split('/').last,
-                          style: const TextStyle(fontSize: 14),
-                        ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.type,
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 14 : 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
                       ),
-                      IconButton(
-                        onPressed: () => _removeFile(index),
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            ],
-
-            const SizedBox(height: 20),
-
-            // Declaration
-            _buildSectionTitle('Declaration'),
-            CheckboxListTile(
-              value: _declarationAccepted,
-              onChanged: (value) {
-                setState(() {
-                  _declarationAccepted = value ?? false;
-                });
-              },
-              title: Text(
-                'I hereby declare that the information provided above is true and accurate. I understand that any false information may result in the rejection of this request.',
-                style: TextStyle(fontSize: isSmallScreen ? 12 : 14),
-              ),
-              controlAffinity: ListTileControlAffinity.leading,
-              contentPadding: EdgeInsets.zero,
-            ),
-
-            const SizedBox(height: 30),
-
-            // Submit Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _submitRequestForm,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  padding: EdgeInsets.symmetric(
-                    vertical: isSmallScreen ? 12 : 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Text(
-                  'Submit Request',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: isSmallScreen ? 14 : 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDonationForm(bool isSmallScreen) {
-    return Form(
-      key: _donateFormKey,
-      child: SingleChildScrollView(
-        padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Donation Info
-            Container(
-              padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: const Border(
-                  left: BorderSide(color: Colors.orange, width: 6),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.type,
-                    style: TextStyle(
-                      fontSize: isSmallScreen ? 14 : 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.orange,
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        size: 14,
-                        color: Colors.grey[600],
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        widget.location,
-                        style: TextStyle(
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          size: 14,
                           color: Colors.grey[600],
-                          fontSize: isSmallScreen ? 12 : 14,
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.description,
-                    style: TextStyle(
-                      fontSize: isSmallScreen ? 12 : 14,
-                      color: Colors.black87,
+                        const SizedBox(width: 4),
+                        Text(
+                          widget.location,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: isSmallScreen ? 12 : 14,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Donor Information
-            _buildSectionTitle('Donor Information'),
-            _buildTextField(
-              'Full Name',
-              _donorNameController,
-              isRequired: true,
-            ),
-            _buildTextField(
-              'Email Address',
-              _donorEmailController,
-              keyboardType: TextInputType.emailAddress,
-              isRequired: true,
-            ),
-            _buildTextField(
-              'Phone Number',
-              _donorPhoneController,
-              keyboardType: TextInputType.phone,
-              isRequired: true,
-            ),
-
-            const SizedBox(height: 20),
-
-            // Donation Amount
-            _buildSectionTitle('Donation Amount'),
-            _buildTextField(
-              'Amount (LKR)',
-              _donationAmountController,
-              keyboardType: TextInputType.number,
-              isRequired: true,
-              prefix: 'LKR ',
-            ),
-
-            const SizedBox(height: 20),
-
-            // Payment Method
-            _buildSectionTitle('Payment Method'),
-            ..._paymentMethods.map((method) {
-              return RadioListTile<String>(
-                title: Text(
-                  method,
-                  style: TextStyle(fontSize: isSmallScreen ? 12 : 14),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.description,
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 12 : 14,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
                 ),
-                value: method,
-                groupValue: _selectedPaymentMethod,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedPaymentMethod = value ?? '';
-                    _selectedBank = '';
-                  });
-                },
-                contentPadding: EdgeInsets.zero,
-              );
-            }).toList(),
+              ),
+              const SizedBox(height: 20),
 
-            if (_selectedPaymentMethod == 'Bank Transfer') ...[
-              const SizedBox(height: 16),
-              _buildSectionTitle('Select Bank'),
-              ..._bankDetails.keys.map((bank) {
+              // Donor Information
+              _buildSectionTitle('Donor Information'),
+              _buildTextField(
+                'Full Name',
+                _donorNameController,
+                isRequired: true,
+              ),
+              _buildTextField(
+                'Email Address',
+                _donorEmailController,
+                keyboardType: TextInputType.emailAddress,
+                isRequired: true,
+              ),
+              _buildTextField(
+                'Phone Number',
+                _donorPhoneController,
+                keyboardType: TextInputType.phone,
+                isRequired: true,
+              ),
+
+              const SizedBox(height: 20),
+
+              // Donation Amount
+              _buildSectionTitle('Donation Amount'),
+              _buildTextField(
+                'Amount (LKR)',
+                _donationAmountController,
+                keyboardType: TextInputType.number,
+                isRequired: true,
+                prefix: 'LKR ',
+              ),
+
+              const SizedBox(height: 20),
+
+              // Payment Method
+              _buildSectionTitle('Payment Method'),
+              ..._paymentMethods.map((method) {
                 return RadioListTile<String>(
                   title: Text(
-                    bank,
+                    method,
                     style: TextStyle(fontSize: isSmallScreen ? 12 : 14),
                   ),
-                  value: bank,
-                  groupValue: _selectedBank,
+                  value: method,
+                  groupValue: _selectedPaymentMethod,
                   onChanged: (value) {
                     setState(() {
-                      _selectedBank = value ?? '';
+                      _selectedPaymentMethod = value ?? '';
+                      _selectedBank = '';
                     });
                   },
                   contentPadding: EdgeInsets.zero,
                 );
               }).toList(),
 
-              if (_selectedBank.isNotEmpty) ...[
+              if (_selectedPaymentMethod == 'Bank Transfer') ...[
                 const SizedBox(height: 16),
+                _buildSectionTitle('Select Bank'),
+                ..._bankDetails.keys.map((bank) {
+                  return RadioListTile<String>(
+                    title: Text(
+                      bank,
+                      style: TextStyle(fontSize: isSmallScreen ? 12 : 14),
+                    ),
+                    value: bank,
+                    groupValue: _selectedBank,
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedBank = value ?? '';
+                      });
+                    },
+                    contentPadding: EdgeInsets.zero,
+                  );
+                }).toList(),
+
+                if (_selectedBank.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange[200]!),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _selectedBank,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Account Holder: ${_bankDetails[_selectedBank]!['accountHolder']}',
+                        ),
+                        Text(
+                          'Account Number: ${_bankDetails[_selectedBank]!['accountNumber']}',
+                        ),
+                        Text(
+                          'Branch: ${_bankDetails[_selectedBank]!['branch']}',
+                        ),
+                        Text(
+                          'SWIFT Code: ${_bankDetails[_selectedBank]!['swiftCode']} (For international donors)',
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Please use the above details to transfer your donation amount.',
+                          style: TextStyle(
+                            fontStyle: FontStyle.italic,
+                            color: Colors.orange,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+
+              if (_selectedPaymentMethod == 'Online Payment (Card)') ...[
+                const SizedBox(height: 16),
+                _buildSectionTitle('Card Details'),
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.orange[50],
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.orange[200]!),
+                    border: Border.all(color: Colors.grey[300]!),
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        _selectedBank,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                      Row(
+                        children: [
+                          const Icon(Icons.credit_card, color: Colors.orange),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Secure Payment with Stripe',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const Spacer(),
+                          Image.asset(
+                            'assets/images/stripe_logo.png',
+                            height: 20,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Text('Stripe'),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Account Holder: ${_bankDetails[_selectedBank]!['accountHolder']}',
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        'Card Number',
+                        _cardNumberController,
+                        isRequired: true,
+                        keyboardType: TextInputType.number,
+                        hintText: '1234 5678 9012 3456',
                       ),
-                      Text(
-                        'Account Number: ${_bankDetails[_selectedBank]!['accountNumber']}',
+                      _buildTextField(
+                        'Cardholder Name',
+                        _cardHolderNameController,
+                        isRequired: true,
                       ),
-                      Text('Branch: ${_bankDetails[_selectedBank]!['branch']}'),
-                      Text(
-                        'SWIFT Code: ${_bankDetails[_selectedBank]!['swiftCode']} (For international donors)',
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Please use the above details to transfer your donation amount.',
-                        style: TextStyle(
-                          fontStyle: FontStyle.italic,
-                          color: Colors.orange,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              'Expiry Date',
+                              _expiryDateController,
+                              isRequired: true,
+                              hintText: 'MM/YY',
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildTextField(
+                              'CVV',
+                              _cvvController,
+                              isRequired: true,
+                              keyboardType: TextInputType.number,
+                              hintText: '123',
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ],
-            ],
 
-            if (_selectedPaymentMethod == 'Online Payment (Card)') ...[
-              const SizedBox(height: 16),
-              _buildSectionTitle('Card Details'),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.credit_card, color: Colors.orange),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Secure Payment with Stripe',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const Spacer(),
-                        Image.asset(
-                          'assets/images/stripe_logo.png',
-                          height: 20,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Text('Stripe'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      'Card Number',
-                      _cardNumberController,
-                      isRequired: true,
-                      keyboardType: TextInputType.number,
-                      hintText: '1234 5678 9012 3456',
-                    ),
-                    _buildTextField(
-                      'Cardholder Name',
-                      _cardHolderNameController,
-                      isRequired: true,
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildTextField(
-                            'Expiry Date',
-                            _expiryDateController,
-                            isRequired: true,
-                            hintText: 'MM/YY',
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildTextField(
-                            'CVV',
-                            _cvvController,
-                            isRequired: true,
-                            keyboardType: TextInputType.number,
-                            hintText: '123',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              const SizedBox(height: 30),
 
-            const SizedBox(height: 30),
-
-            // Donate Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _selectedPaymentMethod.isEmpty
-                    ? null
-                    : _processDonation,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  padding: EdgeInsets.symmetric(
-                    vertical: isSmallScreen ? 12 : 16,
+              // Donate Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _selectedPaymentMethod.isEmpty
+                      ? null
+                      : _processDonation,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    padding: EdgeInsets.symmetric(
+                      vertical: isSmallScreen ? 12 : 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Text(
-                  _selectedPaymentMethod == 'Online Payment (Card)'
-                      ? 'Donate Now - LKR ${_donationAmountController.text}'
-                      : 'Confirm Donation',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: isSmallScreen ? 14 : 16,
-                    fontWeight: FontWeight.w600,
+                  child: Text(
+                    _selectedPaymentMethod == 'Online Payment (Card)'
+                        ? 'Donate Now - LKR ${_donationAmountController.text}'
+                        : 'Confirm Donation',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: isSmallScreen ? 14 : 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );

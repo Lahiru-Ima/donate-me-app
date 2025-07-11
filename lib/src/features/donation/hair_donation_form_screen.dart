@@ -1,12 +1,18 @@
+import 'package:donate_me_app/src/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:donate_me_app/src/models/donation_models/donation_registration_model.dart';
+import 'package:donate_me_app/src/providers/donation_registration_provider.dart';
 
 class HairDonationFormScreen extends StatefulWidget {
+  final String donationRequestId;
   final String type;
   final String location;
   final String description;
 
   const HairDonationFormScreen({
     super.key,
+    required this.donationRequestId,
     required this.type,
     required this.location,
     required this.description,
@@ -361,18 +367,85 @@ class _HairDonationFormScreenState extends State<HairDonationFormScreen> {
     );
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (_formKey.currentState!.validate() && _consentGiven && _guidelinesRead) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Hair donation registration submitted successfully! You will receive confirmation and pickup details soon.',
-          ),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 4),
-        ),
-      );
-      Navigator.pop(context);
+      try {
+
+
+        // Prepare hair-specific data
+        Map<String, dynamic> hairSpecificData = {
+          'hairLength': _hairLengthController.text,
+          'hasGreyHair': _hasGreyHair,
+          'additionalNotes': _additionalNotesController.text,
+          'selectedSalon': _selectedSalon,
+          'pickupAddress': _pickupAddressController.text,
+          'preferredDate': _preferredDateController.text,
+          'preferredTime': _preferredTimeController.text,
+          'requestCertificate': _requestCertificate,
+          'certificateEmail': _certificateEmailController.text,
+        };final authProvider = Provider.of<AuthenticationProvider>(
+          context,
+          listen: false,
+        );
+
+        if (authProvider.userModel?.id == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('User not authenticated'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+        // Create donation registration model
+        final registration = DonationRegistrationModel(
+          donationRequestId: widget.donationRequestId,
+          donorUserId: authProvider.userModel!.id,
+          category: 'hair',
+          status: 'pending',
+          createdAt: DateTime.now(),
+          fullName: _fullNameController.text,
+          nic: _nicController.text,
+          email: _emailController.text,
+          phone: _phoneController.text,
+          address: _addressController.text,
+          gender: _selectedGender,
+          age: int.tryParse(_ageController.text) ?? 0,
+          categorySpecificData: hairSpecificData,
+        );
+
+        // Save to database
+        final provider = Provider.of<DonationRegistrationProvider>(
+          context,
+          listen: false,
+        );
+        final success = await provider.createDonationRegistration(registration);
+
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Hair donation registration submitted successfully! You will receive confirmation and pickup details soon.',
+              ),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 4),
+            ),
+          );
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(provider.error ?? 'Failed to submit registration'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
     } else if (!_consentGiven || !_guidelinesRead) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -487,11 +560,6 @@ class _HairDonationFormScreenState extends State<HairDonationFormScreen> {
                 isRequired: true,
               ),
               _buildTextField('NIC Number', _nicController, isRequired: true),
-              _buildDateField(
-                'Date of Birth',
-                _dobController,
-                isRequired: true,
-              ),
               _buildTextField(
                 'Age',
                 _ageController,

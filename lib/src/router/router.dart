@@ -68,6 +68,7 @@ class RouterClass {
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           return BloodDonationFormScreen(
+            donationRequestId: extra?['id'] ?? '',
             type: extra?['type'] ?? 'Blood',
             location: extra?['location'] ?? '',
             description: extra?['description'] ?? '',
@@ -79,6 +80,7 @@ class RouterClass {
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           return KidneyDonationFormScreen(
+            donationRequestId: extra?['id'] ?? '',
             type: extra?['type'] ?? 'Kidney',
             location: extra?['location'] ?? '',
             description: extra?['description'] ?? '',
@@ -90,6 +92,7 @@ class RouterClass {
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           return HairDonationFormScreen(
+            donationRequestId: extra?['id'] ?? '',
             type: extra?['type'] ?? 'Hair',
             location: extra?['location'] ?? '',
             description: extra?['description'] ?? '',
@@ -101,6 +104,7 @@ class RouterClass {
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           return FundDonationFormScreen(
+            donationRequestId: extra?['id'] ?? '',
             type: extra?['type'] ?? 'Fund',
             location: extra?['location'] ?? '',
             description: extra?['description'] ?? '',

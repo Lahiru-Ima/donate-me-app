@@ -1,5 +1,7 @@
 import 'package:donate_me_app/src/constants/constants.dart';
+import 'package:donate_me_app/src/router/router_names.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class DonationDetailsScreen extends StatelessWidget {
   final Map<String, dynamic> requestData;
@@ -145,99 +147,6 @@ class DonationDetailsScreen extends StatelessWidget {
     };
   }
 
-  List<String> get requirements {
-    switch (type.toLowerCase()) {
-      case 'blood':
-        return [
-          'Age: 18-65 years',
-          'Weight: Minimum 50kg',
-          'Good health condition',
-          'No recent illness or medication',
-          'Valid ID required',
-          'No alcohol 24 hours before donation',
-        ];
-      case 'kidney':
-        return [
-          'Age: 18-70 years',
-          'Comprehensive medical evaluation',
-          'Psychological assessment',
-          'Family consent required',
-          'Valid ID and medical records',
-          'No history of major diseases',
-        ];
-      case 'hair':
-        return [
-          'Age: 18-60 years',
-          'Weight: Minimum 55kg',
-          'Previous blood donation experience',
-          'Good hydration required',
-          'Valid ID required',
-          'No recent vaccinations',
-        ];
-      case 'fund':
-        return [
-          'Age: 18-60 years',
-          'Weight: Minimum 50kg',
-          'Normal platelet count',
-          'No aspirin 48 hours before',
-          'Valid ID required',
-          'Good health condition',
-        ];
-      default:
-        return [
-          'Age: 18-65 years',
-          'Good health condition',
-          'Valid ID required',
-          'Medical clearance if needed',
-        ];
-    }
-  }
-
-  Map<String, String> get contactInfo {
-    switch (type.toLowerCase()) {
-      case 'blood donation':
-        return {
-          'coordinator': 'Blood Bank Coordinator',
-          'name': 'Dr. Priya Mendis',
-          'phone': '+94 77 234 5678',
-          'email': 'bloodbank@hospital.lk',
-          'time': '24/7 Emergency Available',
-        };
-      case 'organ donation':
-        return {
-          'coordinator': 'Organ Transplant Coordinator',
-          'name': 'Dr. Kamal Perera',
-          'phone': '+94 77 345 6789',
-          'email': 'organs@transplant.lk',
-          'time': '24/7 Critical Care',
-        };
-      case 'plasma donation':
-        return {
-          'coordinator': 'Plasma Center Coordinator',
-          'name': 'Dr. Nimal Silva',
-          'phone': '+94 77 456 7890',
-          'email': 'plasma@medcenter.lk',
-          'time': '8:00 AM - 4:00 PM',
-        };
-      case 'platelet donation':
-        return {
-          'coordinator': 'Hematology Coordinator',
-          'name': 'Dr. Anjali Fernando',
-          'phone': '+94 77 567 8901',
-          'email': 'platelets@hospital.lk',
-          'time': '9:00 AM - 5:00 PM',
-        };
-      default:
-        return {
-          'coordinator': 'Medical Coordinator',
-          'name': 'Dr. Sarah Johnson',
-          'phone': '+94 77 123 4567',
-          'email': 'coordinator@hospital.lk',
-          'time': '8:00 AM - 6:00 PM',
-        };
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -260,15 +169,11 @@ class DonationDetailsScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.share, color: Colors.black),
-            onPressed: () {
-              // Implement share functionality
-            },
+            onPressed: () {},
           ),
           IconButton(
             icon: const Icon(Icons.favorite_border, color: Colors.black),
-            onPressed: () {
-              // Implement save functionality
-            },
+            onPressed: () {},
           ),
         ],
       ),
@@ -550,7 +455,7 @@ class DonationDetailsScreen extends StatelessWidget {
               flex: 2,
               child: ElevatedButton(
                 onPressed: () {
-                  _showDonationConfirmation(context);
+                  _navigateToCategory(context);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimaryColor,
@@ -573,6 +478,32 @@ class DonationDetailsScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _navigateToCategory(BuildContext context) {
+    final routeMap = {
+      'blood': RouterNames.bloodDonation,
+      'hair': RouterNames.hairDonation,
+      'kidney': RouterNames.kidneyDonation,
+      'fund': RouterNames.fundDonation,
+    };
+
+    final route = routeMap[category.toLowerCase()];
+    if (route != null) {
+      context.push(
+        route,
+        extra: {
+          'donationRequestId': id, // Pass the donation request ID
+          'type': type,
+          'location': location,
+          'description': description,
+          'category': category,
+          'isUrgent': isUrgent,
+          'id': id,
+          ...requestData,
+        },
+      );
+    }
   }
 
   Widget _buildDynamicRequirementItem(Map<String, String> requirement) {
@@ -627,62 +558,6 @@ class DonationDetailsScreen extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  void _showDonationConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          title: const Text(
-            'Confirm Donation',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          content: Text(
-            'Are you sure you want to donate for "$type"? The coordinator will contact you shortly.',
-            style: const TextStyle(fontSize: 14),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel', style: TextStyle(color: Colors.grey[600])),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _showSuccessMessage(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Confirm',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showSuccessMessage(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text(
-          'Thank you! Your donation request has been submitted.',
-        ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }

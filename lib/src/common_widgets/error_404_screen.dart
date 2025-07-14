@@ -1,5 +1,4 @@
 import 'package:donate_me_app/src/common_widgets/primary_button.dart';
-import 'package:donate_me_app/src/constants/constants.dart';
 import 'package:donate_me_app/src/router/router_names.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';

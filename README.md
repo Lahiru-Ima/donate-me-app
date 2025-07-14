@@ -10,6 +10,12 @@ A Flutter-based donation management application built for ICBT 2025 university a
 - 🚨 Urgent request handling
 - 📊 Dashboard with donation statistics
 - 🎨 Modern UI with custom widgets
+- 🩸 Blood donation registration and tracking
+- 💳 Multiple payment methods (Bank Transfer, Online Payment with Stripe)
+- 💼 Caregiver job postings and applications
+- 📋 User post management with categorized tabs
+- ⚙️ Multi-language support (English/Sinhala)
+- 📞 Help and support system with FAQ
 
 ## Tech Stack
 
@@ -59,6 +65,67 @@ SUPABASE_ANON_KEY=your_supabase_anon_key
 ```bash
 flutter run
 ```
+
+## Screenshots
+
+## Screenshots
+
+### Authentication
+
+<div align="center">
+  <img src="screenshots/sign_in.png" alt="Sign In Screen" width="200"/>
+  <img src="screenshots/sign_up.png" alt="Sign Up Screen" width="200"/>
+</div>
+
+_Secure user authentication with form validation and error handling_
+
+### Donation Management
+
+<div align="center">  
+  <img src="screenshots/donation_home_screen.png" alt="Donation Home Screen" width="200"/>
+  <img src="screenshots/donation_details.png" alt="Donation Details Screen" width="200"/>
+  <img src="screenshots/blood_donation_registration.png" alt="Blood Donation Registration" width="200"/>
+  <img src="screenshots/fund_donation_bank.png" alt="Fund Donation - Bank Transfer" width="200"/>
+</div>
+
+_Features: Urgent blood requests with detailed requirements, comprehensive medical screening forms, and multiple payment options_
+
+### Payment Processing
+
+<div align="center">
+  <img src="screenshots/fund_donation_card.png" alt="Fund Donation - Card Payment" width="200"/>
+</div>
+
+_Secure online payments with Stripe integration for card transactions_
+
+### User Management & Jobs
+
+<div align="center">
+  <img src="screenshots/caregiver_jobs.png" alt="Caregiver Jobs Listing" width="200"/>
+  <img src="screenshots/user_profile.png" alt="User Profile Dashboard" width="200"/>
+  <img src="screenshots/my_posts.png" alt="My Posts Management" width="200"/>
+</div>
+
+_Professional job listings for caregivers, comprehensive user profile management, and organized donation post tracking with category tabs_
+
+### Settings & Support
+
+<div align="center">
+  <img src="screenshots/settings.png" alt="App Settings" width="200"/>
+  <img src="screenshots/help_support.png" alt="Help & Support Center" width="200"/>
+</div>
+
+_Multi-language support with English/Sinhala options and comprehensive help system with expandable FAQ sections_
+
+## Key Features Highlighted in Screenshots
+
+- **🔐 Authentication System**: Secure sign-in and sign-up with form validation
+- **🩸 Blood Donation System**: Complete registration process with medical screening
+- **💰 Fund Donations**: Secure payment processing with multiple payment methods
+- **💼 Job Board**: Caregiver job postings with detailed requirements
+- **📱 User Dashboard**: Personal profile and donation history tracking
+- **⚙️ Settings**: Language preferences and app configuration
+- **🆘 Help System**: FAQ and support contact options
 
 ## Project Structure
 

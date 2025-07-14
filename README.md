@@ -85,7 +85,6 @@ _Secure user authentication with form validation and error handling_
   <img src="screenshots/donation_home_screen.png" alt="Donation Home Screen" width="200"/>
   <img src="screenshots/donation_details.png" alt="Donation Details Screen" width="200"/>
   <img src="screenshots/blood_donation_registration.png" alt="Blood Donation Registration" width="200"/>
-  <img src="screenshots/fund_donation_bank.png" alt="Fund Donation - Bank Transfer" width="200"/>
 </div>
 
 _Features: Urgent blood requests with detailed requirements, comprehensive medical screening forms, and multiple payment options_
@@ -93,6 +92,7 @@ _Features: Urgent blood requests with detailed requirements, comprehensive medic
 ### Payment Processing
 
 <div align="center">
+  <img src="screenshots/fund_donation_bank.png" alt="Fund Donation - Bank Transfer" width="200"/>
   <img src="screenshots/fund_donation_card.png" alt="Fund Donation - Card Payment" width="200"/>
 </div>
 

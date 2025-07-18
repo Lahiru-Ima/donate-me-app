@@ -4,13 +4,12 @@ A Flutter-based donation management application built for ICBT 2025 university a
 
 ## Features
 
-- 📱 Cross-platform Flutter application (iOS, Android, Web)
 - 🔐 User authentication and profile management
 - 💰 Donation tracking and management
 - 🚨 Urgent request handling
-- 📊 Dashboard with donation statistics
+- 📊 Dashboard with donation types
 - 🎨 Modern UI with custom widgets
-- 🩸 Blood donation registration and tracking
+- 🩸 Blood donation registration
 - 💳 Multiple payment methods (Bank Transfer, Online Payment with Stripe)
 - 💼 Caregiver job postings and applications
 - 📋 User post management with categorized tabs
@@ -68,8 +67,6 @@ flutter run
 
 ## Screenshots
 
-## Screenshots
-
 ### Authentication
 
 <div align="center">
@@ -123,7 +120,7 @@ _Multi-language support with English/Sinhala options and comprehensive help syst
 - **🩸 Blood Donation System**: Complete registration process with medical screening
 - **💰 Fund Donations**: Secure payment processing with multiple payment methods
 - **💼 Job Board**: Caregiver job postings with detailed requirements
-- **📱 User Dashboard**: Personal profile and donation history tracking
+- **📱 User Dashboard**: Personal profile and donation history
 - **⚙️ Settings**: Language preferences and app configuration
 - **🆘 Help System**: FAQ and support contact options
 

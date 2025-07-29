@@ -221,7 +221,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   // Wave Image at Bottom
                   if (keyboardHeight ==
                       0) // Only show when keyboard is not visible
-                    Container(
+                    SizedBox(
                       width: double.infinity,
                       child: Image.asset(
                         'assets/images/wave.png',

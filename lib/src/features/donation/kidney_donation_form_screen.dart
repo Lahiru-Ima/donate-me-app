@@ -677,7 +677,7 @@ class _KidneyDonationFormScreenState extends State<KidneyDonationFormScreen> {
               },
               contentPadding: EdgeInsets.zero,
             );
-          }).toList(),
+          }),
         ],
       ),
     );

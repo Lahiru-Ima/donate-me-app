@@ -1038,7 +1038,7 @@ class _HairDonationFormScreenState extends State<HairDonationFormScreen> {
               },
               contentPadding: EdgeInsets.zero,
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -1095,7 +1095,7 @@ class _HairDonationFormScreenState extends State<HairDonationFormScreen> {
                 );
               }).toList(),
             );
-          }).toList(),
+          }),
         ],
       ),
     );

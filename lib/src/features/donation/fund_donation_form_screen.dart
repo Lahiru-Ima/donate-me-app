@@ -365,7 +365,7 @@ class _FundDonationFormScreenState extends State<FundDonationFormScreen> {
                   },
                   contentPadding: EdgeInsets.zero,
                 );
-              }).toList(),
+              }),
 
               if (_selectedPaymentMethod == 'Bank Transfer') ...[
                 const SizedBox(height: 16),
@@ -385,7 +385,7 @@ class _FundDonationFormScreenState extends State<FundDonationFormScreen> {
                     },
                     contentPadding: EdgeInsets.zero,
                   );
-                }).toList(),
+                }),
 
                 if (_selectedBank.isNotEmpty) ...[
                   const SizedBox(height: 16),

@@ -1,3 +1,4 @@
+import 'package:donate_me_app/src/constants/constants.dart';
 import 'package:donate_me_app/src/constants/donation_category.dart';
 import 'package:donate_me_app/src/models/request_models/donation_request_model.dart';
 import 'package:donate_me_app/src/router/router_names.dart';
@@ -209,7 +210,7 @@ class DonationRequestCard extends StatelessWidget {
     return ElevatedButton(
       onPressed: () => _navigateToCategory(context),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.red,
+        backgroundColor: kPrimaryColor,
         padding: EdgeInsets.symmetric(
           vertical: 8,
           horizontal: isUrgent ? 0 : 20,

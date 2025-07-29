@@ -48,8 +48,8 @@ class _CreateFundPostScreenState extends State<CreateFundPostScreen>
   final _organizationAddressController = TextEditingController();
   final _additionalNotesController = TextEditingController();
 
-  List<File> _uploadedFiles = [];
-  List<String> _supportingDocuments = [];
+  final List<File> _uploadedFiles = [];
+  final List<String> _supportingDocuments = [];
   String _urgencyLevel = '';
   String _fundCategory = '';
   String _charityCategory = '';
@@ -606,7 +606,7 @@ class _CreateFundPostScreenState extends State<CreateFundPostScreen>
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
               );
-            }).toList(),
+            }),
 
             const SizedBox(height: 16),
 

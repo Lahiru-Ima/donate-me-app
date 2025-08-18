@@ -5,10 +5,11 @@ import 'package:donate_me_app/src/constants/constants.dart';
 import 'package:donate_me_app/src/models/user_model.dart';
 import 'package:donate_me_app/src/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -22,9 +23,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _phoneController;
   late TextEditingController _dobController;
   String gender = 'female';
+  String? imgUrl;
   File? _selectedImage;
   bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
+
   @override
   void initState() {
     super.initState();
@@ -45,6 +48,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       text: authProvider.userModel?.dateOfBirth ?? '',
     );
     gender = authProvider.userModel?.gender ?? 'female';
+    imgUrl = authProvider.userModel?.profileImgUrl;
   }
 
   Future<void> _saveProfile() async {
@@ -54,7 +58,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         context,
         listen: false,
       );
-      String? imgUrl;
 
       final updatedUser = UserModel(
         id: authProvider.userModel!.id,
@@ -64,6 +67,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         dateOfBirth: _dobController.text,
         gender: gender,
         profileImgUrl: imgUrl ?? '',
+        createdAt: authProvider.userModel!.createdAt,
       );
 
       await authProvider.updateUser(updatedUser);
@@ -87,16 +91,72 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  Future<void> requestPermission() async {
+    if (Platform.isAndroid) {
+      if (await Permission.photos.isDenied ||
+          await Permission.photos.isPermanentlyDenied) {
+        await Permission.photos.request();
+      }
+    }
+  }
+
   Future<void> _pickImage(ImageSource source) async {
     try {
+      if (Platform.isAndroid) {
+        await requestPermission();
+      }
       final XFile? pickedImage = await _picker.pickImage(source: source);
       if (pickedImage != null) {
         setState(() {
           _selectedImage = File(pickedImage.path);
         });
       }
+      await uploadImage();
     } catch (e) {
       SnackBarUtil.showErrorSnackBar(context, 'Failed to pick image: $e');
+    }
+  }
+
+  //Upload selected image to Supabase storage
+  Future<void> uploadImage() async {
+    if (_selectedImage == null) {
+      return;
+    }
+
+    try {
+       final user = Supabase.instance.client.auth.currentUser;
+      final userId = user?.id ?? '';
+
+      final path = 'avatars/$userId';
+
+      await Supabase.instance.client.storage
+          .from('avatars')
+          .upload(
+            path,
+            _selectedImage!,
+            fileOptions: FileOptions(upsert: true),
+          );
+      final publicUrl = Supabase.instance.client.storage
+          .from('avatars')
+          .getPublicUrl(path);
+      setState(() {
+        imgUrl = publicUrl;
+      });
+
+      print('Image uploaded: $publicUrl');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image uploaded successfully!')),
+        );
+      }
+    } catch (e) {
+      print(e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error uploading image: ${e.toString()}')),
+        );
+      }
     }
   }
 
@@ -324,23 +384,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  FormBuilderDateTimePicker(
-                    name: 'date_of_birth',
+                  TextFormField(
+                    readOnly: true,
                     controller: _dobController,
-                    inputType: InputType.date,
                     decoration: InputDecoration(
                       labelText: 'Date Of Birth',
-                      hintText: 'DD/MM/YYYY',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: kPrimaryColor),
-                      ),
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      suffixIcon: const Icon(Icons.calendar_today),
+                      hintText: 'DD/MM/YYYY',
                     ),
+                    onTap: () =>
+                        showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(1900),
+                          lastDate: DateTime.now(),
+                        ).then((selectedDate) {
+                          if (selectedDate != null) {
+                            _dobController.text =
+                                '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}';
+                          }
+                        }),
                   ),
-
                   const SizedBox(height: 16),
 
                   // Gender

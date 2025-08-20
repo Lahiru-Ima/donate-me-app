@@ -107,15 +107,15 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 color: Colors.black,
               ),
             ),
-            actions: [
-              IconButton(
-                onPressed: _showSearchDialog,
-                icon: Icon(
-                  _searchQuery.isEmpty ? Icons.search : Icons.search_off,
-                  color: Colors.black,
-                ),
-              ),
-            ],
+            // actions: [
+            //   IconButton(
+            //     onPressed: _showSearchDialog,
+            //     icon: Icon(
+            //       _searchQuery.isEmpty ? Icons.search : Icons.search_off,
+            //       color: Colors.black,
+            //     ),
+            //   ),
+            // ],
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(16),

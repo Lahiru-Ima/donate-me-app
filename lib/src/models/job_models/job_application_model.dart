@@ -6,16 +6,14 @@ class JobApplicationModel {
   final String email;
   final String phone;
   final String address;
-  final int? age;
-  final String? gender;
   final String? experience;
   final List<String>? skills;
   final String? availability;
   final String? motivation;
-  final List<String>? referencesList;
   final String? emergencyContact;
   final String? emergencyPhone;
-  final String status; // 'pending', 'reviewed', 'shortlisted', 'rejected', 'hired'
+  final String
+  status; // 'pending', 'reviewed', 'shortlisted', 'rejected', 'hired'
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -33,15 +31,12 @@ class JobApplicationModel {
     required this.email,
     required this.phone,
     required this.address,
-     this.age,
-  this.gender,
     this.experience,
     this.skills,
     this.availability,
     this.motivation,
-    this.referencesList,
     this.emergencyContact,
-     this.emergencyPhone,
+    this.emergencyPhone,
     this.status = 'pending',
     this.createdAt,
     this.updatedAt,
@@ -60,15 +55,10 @@ class JobApplicationModel {
       email: map['email']?.toString() ?? '',
       phone: map['phone']?.toString() ?? '',
       address: map['address']?.toString() ?? '',
-      age: map['age']?.toInt() ?? 0,
-      gender: map['gender']?.toString() ?? '',
       experience: map['experience']?.toString() ?? '',
       skills: map['skills'] != null ? List<String>.from(map['skills']) : [],
       availability: map['availability']?.toString() ?? '',
       motivation: map['motivation']?.toString() ?? '',
-      referencesList: map['referencesList'] != null
-          ? List<String>.from(map['referencesList'])
-          : [],
       emergencyContact: map['emergency_contact']?.toString() ?? '',
       emergencyPhone: map['emergency_phone']?.toString() ?? '',
       status: map['status']?.toString() ?? 'pending',
@@ -93,13 +83,10 @@ class JobApplicationModel {
       'email': email,
       'phone': phone,
       'address': address,
-      'age': age,
-      'gender': gender,
       'experience': experience,
       'skills': skills,
       'availability': availability,
       'motivation': motivation,
-      'referencesList': referencesList,
       'emergency_contact': emergencyContact,
       'emergency_phone': emergencyPhone,
       'status': status,
@@ -137,7 +124,6 @@ class JobApplicationModel {
     String? email,
     String? phone,
     String? address,
-    int? age,
     String? gender,
     String? experience,
     List<String>? skills,
@@ -162,13 +148,10 @@ class JobApplicationModel {
       email: email ?? this.email,
       phone: phone ?? this.phone,
       address: address ?? this.address,
-      age: age ?? this.age,
-      gender: gender ?? this.gender,
       experience: experience ?? this.experience,
       skills: skills ?? this.skills,
       availability: availability ?? this.availability,
       motivation: motivation ?? this.motivation,
-      referencesList: referencesList ?? this.referencesList,
       emergencyContact: emergencyContact ?? this.emergencyContact,
       emergencyPhone: emergencyPhone ?? this.emergencyPhone,
       status: status ?? this.status,

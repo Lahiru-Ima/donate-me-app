@@ -35,12 +35,12 @@ class _JobScreenState extends State<JobScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () => _showSearchDialog(context),
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.search),
+        //     onPressed: () => _showSearchDialog(context),
+        //   ),
+        // ],
       ),
       body: Consumer<JobProvider>(
         builder: (context, jobProvider, child) {
@@ -200,16 +200,13 @@ class _JobScreenState extends State<JobScreen> {
       return _buildEmptyState();
     }
 
-    return RefreshIndicator(
-      onRefresh: () => jobProvider.fetchJobs(),
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: jobProvider.jobs.length,
-        itemBuilder: (context, index) {
-          final job = jobProvider.jobs[index];
-          return _buildJobCard(context, job);
-        },
-      ),
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: jobProvider.jobs.length,
+      itemBuilder: (context, index) {
+        final job = jobProvider.jobs[index];
+        return _buildJobCard(context, job);
+      },
     );
   }
 }
@@ -462,4 +459,3 @@ Widget _buildEmptyState() {
     ),
   );
 }
-

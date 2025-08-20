@@ -164,13 +164,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  _buildSettingsOption(
-                    'Notifications',
-                    'Manage notification preferences',
-                    Icons.notifications_outlined,
-                    () {},
-                  ),
-                  const SizedBox(height: 12),
+                  // _buildSettingsOption(
+                  //   'Notifications',
+                  //   'Manage notification preferences',
+                  //   Icons.notifications_outlined,
+                  //   () {},
+                  // ),
+                  // const SizedBox(height: 12),
                   _buildSettingsOption(
                     'Privacy',
                     'Privacy and security settings',
@@ -365,7 +365,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Last updated: December 2024',
+                  'Last updated: August 2025',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],

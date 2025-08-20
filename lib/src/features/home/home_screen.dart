@@ -89,28 +89,28 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          _buildSearchButton(),
+          // _buildSearchButton(),
         ],
       ),
     );
   }
 
-  Widget _buildSearchButton() {
-    return InkWell(
-      onTap: () {
-        // TODO: Implement search functionality
-      },
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: const Icon(Icons.search, color: Colors.white),
-      ),
-    );
-  }
+  // Widget _buildSearchButton() {
+  //   return InkWell(
+  //     onTap: () {
+  //       // TODO: Implement search functionality
+  //     },
+  //     child: Container(
+  //       width: 40,
+  //       height: 40,
+  //       decoration: BoxDecoration(
+  //         color: Colors.black,
+  //         borderRadius: BorderRadius.circular(20),
+  //       ),
+  //       child: const Icon(Icons.search, color: Colors.white),
+  //     ),
+  //   );
+  // }
 
   Widget _buildFAB() {
     return FloatingActionButton(

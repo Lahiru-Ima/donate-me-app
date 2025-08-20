@@ -169,12 +169,12 @@ class DonationDetailsScreen extends StatelessWidget {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.share, color: Colors.black),
-            onPressed: () {
-              // TODO: Implement share functionality
-            },
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.share, color: Colors.black),
+          //   onPressed: () {
+          //     // TODO: Implement share functionality
+          //   },
+          // ),
           Consumer<WishlistProvider>(
             builder: (context, wishlistProvider, child) {
               final isInWishlist = id.isNotEmpty

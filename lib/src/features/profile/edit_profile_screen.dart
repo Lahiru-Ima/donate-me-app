@@ -143,15 +143,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         imgUrl = publicUrl;
       });
 
-      print('Image uploaded: $publicUrl');
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Image uploaded successfully!')),
         );
       }
     } catch (e) {
-      print(e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error uploading image: ${e.toString()}')),

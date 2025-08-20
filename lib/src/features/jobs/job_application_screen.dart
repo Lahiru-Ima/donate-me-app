@@ -3,6 +3,7 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../common_widgets/primary_button.dart';
 import '../../models/job_models/job_model.dart';
 import '../../models/job_models/job_application_model.dart';
@@ -60,9 +61,7 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
     if (widget.job == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Apply for Job')),
-        body: const Center(
-          child: Text('Job information not available'),
-        ),
+        body: const Center(child: Text('Job information not available')),
       );
     }
 
@@ -186,9 +185,7 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please describe your previous experience';
                   }
-                  if (value.trim().length < 50) {
-                    return 'Please provide more details (at least 50 characters)';
-                  }
+
                   return null;
                 },
               ),
@@ -295,9 +292,7 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please explain why we should hire you';
                   }
-                  if (value.trim().length < 100) {
-                    return 'Please provide more details (at least 100 characters)';
-                  }
+
                   return null;
                 },
               ),
@@ -596,7 +591,7 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
   Future<void> _pickFile({required bool isResume}) async {
     try {
       final ImagePicker picker = ImagePicker();
-      final XFile? file = await picker.pickImage(source: ImageSource.gallery);
+      final XFile? file = await picker.pickImage(source: ImageSource.camera);
 
       if (file != null) {
         setState(() {
@@ -607,6 +602,7 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
           }
         });
       }
+      await uploadResume();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -617,20 +613,49 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
     }
   }
 
+  Future<void> uploadResume() async {
+    if (_resumeFile == null) {
+      return;
+    }
+
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      final userId = user?.id ?? '';
+
+      final path = 'resume/$userId';
+
+      await Supabase.instance.client.storage
+          .from('avatars')
+          .upload(path, _resumeFile!, fileOptions: FileOptions(upsert: true));
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Resume uploaded successfully!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error uploading image: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
   Future<void> _submitApplication() async {
     if (!_formKey.currentState!.saveAndValidate()) {
       return;
     }
 
-    if (_resumeFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please upload your resume/CV'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
+    // if (_resumeFile == null) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(
+    //       content: Text('Please upload your resume/CV'),
+    //       backgroundColor: Colors.red,
+    //     ),
+    //   );
+    //   return;
+    // }
 
     if (widget.job?.id == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -667,25 +692,28 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
 
     try {
       final formData = _formKey.currentState!.fields;
-      
+
       // Get form values with null safety
       final fullName = formData['full_name']?.value?.toString() ?? '';
       final phone = formData['phone']?.value?.toString() ?? '';
       final email = formData['email']?.value?.toString() ?? '';
       final address = formData['address']?.value?.toString() ?? '';
       final experience = formData['experience']?.value?.toString() ?? '';
-      final previousExperience = formData['previous_experience']?.value?.toString() ?? '';
+      final previousExperience =
+          formData['previous_experience']?.value?.toString() ?? '';
       final skillsString = formData['skills']?.value?.toString() ?? '';
-      final expectedSalary = formData['expected_salary']?.value?.toString() ?? '';
+      final expectedSalary =
+          formData['expected_salary']?.value?.toString() ?? '';
       final whyHire = formData['why_hire']?.value?.toString() ?? '';
-      
-      // Convert skills string to list
-      List<String> skillsList = skillsString.isNotEmpty 
-          ? skillsString.split(',').map((skill) => skill.trim()).where((skill) => skill.isNotEmpty).toList()
-          : [];
 
-      // Convert references to list (for now, use a placeholder)
-      List<String> referencesList = ['Available upon request'];
+      // Convert skills string to list
+      List<String> skillsList = skillsString.isNotEmpty
+          ? skillsString
+                .split(',')
+                .map((skill) => skill.trim())
+                .where((skill) => skill.isNotEmpty)
+                .toList()
+          : [];
 
       final applicationData = JobApplicationModel(
         jobId: widget.job!.id!,
@@ -698,12 +726,20 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
         skills: skillsList,
         availability: _selectedAvailability,
         motivation: whyHire,
-        referencesList: referencesList,
-        additionalNotes: 'Preferred work type: $_selectedWorkType. Language proficiency: $_selectedLanguage. Expected salary: $expectedSalary',
+        emergencyContact: phone,
+        emergencyPhone: phone,
+        status: 'pending',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        previousEmployment: '',
+        healthConditions: '',
+        hasTransportation: false,
+        additionalNotes:
+            'Preferred work type: $_selectedWorkType. Language proficiency: $_selectedLanguage. Expected salary: $expectedSalary',
       );
 
       final success = await jobProvider.submitJobApplication(applicationData);
-      
+
       if (success) {
         // Show success message
         if (mounted) {
@@ -720,9 +756,12 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
       } else {
         // Show error message
         if (mounted) {
+          print(jobProvider.error);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error submitting application: ${jobProvider.error ?? 'Unknown error'}'),
+              content: Text(
+                'Error submitting application: ${jobProvider.error ?? 'Unknown error'}',
+              ),
               backgroundColor: Colors.red,
             ),
           );

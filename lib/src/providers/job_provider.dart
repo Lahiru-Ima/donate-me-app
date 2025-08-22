@@ -29,15 +29,7 @@ class JobProvider extends ChangeNotifier {
   String get searchKeyword => _searchKeyword;
 
   // ========== FILTER OPTIONS ==========
-  List<String> get jobTypes => [
-    'All',
-    'Full-time (8 hours/day)',
-    'Part-time (4 hours/day)',
-    'Overnight (10pm - 6am)',
-    'Flexible hours',
-    'Weekend only',
-    'Weekdays only',
-  ];
+  List<String> get jobTypes => ['All', 'Full-time (8 hours/day)', 'Part-time (4 hours/day)', 'Overnight (10pm - 6am)', 'Flexible hours', 'Weekend only', 'Weekdays only'];
 
   List<String> get locations => [
     'All',
@@ -107,11 +99,7 @@ class JobProvider extends ChangeNotifier {
       if (_searchKeyword.isNotEmpty) {
         _jobs = await _jobService.searchJobs(_searchKeyword);
       } else {
-        _jobs = await _jobService.getFilteredJobs(
-          type: _selectedType != 'All' ? _selectedType : null,
-          location: _selectedLocation != 'All' ? _selectedLocation : null,
-          urgentOnly: _urgentOnly,
-        );
+        _jobs = await _jobService.getFilteredJobs(type: _selectedType != 'All' ? _selectedType : null, location: _selectedLocation != 'All' ? _selectedLocation : null, urgentOnly: _urgentOnly);
       }
       _clearError();
       notifyListeners();
@@ -178,6 +166,16 @@ class JobProvider extends ChangeNotifier {
       _setError('Failed to fetch user applications: ${e.toString()}');
     } finally {
       _setLoading(false);
+    }
+  }
+
+  /// Check if user has already applied for a job
+  Future<bool> checkExistingApplication(String userId, String jobId) async {
+    try {
+      return await _jobService.hasUserAppliedForJob(userId, jobId);
+    } catch (e) {
+      _setError('Failed to check existing application: ${e.toString()}');
+      return false;
     }
   }
 

@@ -121,41 +121,41 @@ class _JobScreenState extends State<JobScreen> {
     );
   }
 
-  void _showSearchDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final TextEditingController searchController = TextEditingController();
-        return AlertDialog(
-          title: const Text('Search Jobs'),
-          content: TextField(
-            controller: searchController,
-            decoration: const InputDecoration(
-              hintText: 'Enter keywords...',
-              border: OutlineInputBorder(),
-            ),
-            autofocus: true,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                context.read<JobProvider>().setSearchKeyword(
-                  searchController.text,
-                );
-                context.read<JobProvider>().searchJobs();
-                Navigator.pop(context);
-              },
-              child: const Text('Search'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // void _showSearchDialog(BuildContext context) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) {
+  //       final TextEditingController searchController = TextEditingController();
+  //       return AlertDialog(
+  //         title: const Text('Search Jobs'),
+  //         content: TextField(
+  //           controller: searchController,
+  //           decoration: const InputDecoration(
+  //             hintText: 'Enter keywords...',
+  //             border: OutlineInputBorder(),
+  //           ),
+  //           autofocus: true,
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () => Navigator.pop(context),
+  //             child: const Text('Cancel'),
+  //           ),
+  //           ElevatedButton(
+  //             onPressed: () {
+  //               context.read<JobProvider>().setSearchKeyword(
+  //                 searchController.text,
+  //               );
+  //               context.read<JobProvider>().searchJobs();
+  //               Navigator.pop(context);
+  //             },
+  //             child: const Text('Search'),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   Widget _buildJobsList(JobProvider jobProvider) {
     if (jobProvider.isLoading) {
